@@ -52,3 +52,8 @@ next-env.d.ts
 # OS files
 Thumbs.db
 
+# Project guides & metadata
+AGENTS.md
+hươngdan.md
+
+
