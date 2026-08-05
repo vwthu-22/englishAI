@@ -4,7 +4,8 @@ import {
   Video, Settings, CheckCircle, XCircle, Download,
   ChevronDown, ChevronRight, Lightbulb, RefreshCw, AlertCircle,
   Headphones, Sparkles, Plus, Globe, ArrowRight,
-  Search, Share2, Users, BookOpen, Star, Clock, Bookmark
+  Search, Share2, Users, BookOpen, Star, Clock, Bookmark,
+  ListOrdered, FileText, CheckSquare, Link2, Edit3
 } from 'lucide-react';
 import { generateQuestions, Question } from '@/lib/store';
 import { useApp } from '@/context/AppContext';
@@ -19,11 +20,11 @@ const extractVideoId = (url: string) => {
 
 const DIFFICULTY_LEVELS = ['A2', 'B1', 'B2', 'C1', 'Easy', 'Medium', 'Hard'];
 const QUESTION_TYPES = [
-  { id: 'multiple-choice', label: 'Multiple Choice', icon: '🔵' },
-  { id: 'gap-fill', label: 'Gap Fill', icon: '📝' },
-  { id: 'true-false', label: 'True / False', icon: '✅' },
-  { id: 'matching', label: 'Matching', icon: '🔗' },
-  { id: 'short-answer', label: 'Short Answer', icon: '✍️' },
+  { id: 'multiple-choice', label: 'Multiple Choice', Icon: ListOrdered },
+  { id: 'gap-fill', label: 'Gap Fill', Icon: FileText },
+  { id: 'true-false', label: 'True / False', Icon: CheckSquare },
+  { id: 'matching', label: 'Matching', Icon: Link2 },
+  { id: 'short-answer', label: 'Short Answer', Icon: Edit3 },
 ];
 
 // ── Suggested Exercises Component ──────────────────────────────────────────
@@ -41,10 +42,10 @@ function SuggestedExercises({ currentType }: { currentType: 'listening' | 'readi
   }, []);
 
   const suggestions = [
-    { title: 'TED Talk: Future of AI', difficulty: 'B2', type: 'listening', qs: 10, tag: '🎧 Listening' },
-    { title: 'IELTS Reading: Climate', difficulty: 'C1', type: 'reading', qs: 15, tag: '📖 Reading' },
-    { title: 'BBC News Comprehension', difficulty: 'B1', type: 'listening', qs: 8, tag: '🎧 Listening' },
-    { title: 'Academic Vocabulary Boost', difficulty: 'B2', type: 'reading', qs: 12, tag: '📖 Reading' },
+    { title: 'TED Talk: Future of AI', difficulty: 'B2', type: 'listening', qs: 10, tag: 'Listening' },
+    { title: 'IELTS Reading: Climate', difficulty: 'C1', type: 'reading', qs: 15, tag: 'Reading' },
+    { title: 'BBC News Comprehension', difficulty: 'B1', type: 'listening', qs: 8, tag: 'Listening' },
+    { title: 'Academic Vocabulary Boost', difficulty: 'B2', type: 'reading', qs: 12, tag: 'Reading' },
   ];
 
   return (
@@ -184,7 +185,26 @@ export default function ListeningPage() {
     }
   }, [publishedQuizzes]);
 
-  const handlePublish = () => storeHandlePublish(addPublishedListeningQuiz);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [pubTitle, setPubTitle] = useState('');
+  const [pubTopic, setPubTopic] = useState('General');
+  const [pubDifficulty, setPubDifficulty] = useState(difficulty);
+
+  const openPublishModal = () => {
+    setPubTitle(`Listening Quiz – ${difficulty}`);
+    setPubTopic('General');
+    setPubDifficulty(difficulty);
+    setShowPublishModal(true);
+  };
+
+  const handleConfirmPublish = async () => {
+    setShowPublishModal(false);
+    await storeHandlePublish(addPublishedListeningQuiz, {
+      title: pubTitle || `Listening Quiz – ${pubDifficulty}`,
+      topic: pubTopic || 'General',
+      difficulty: pubDifficulty || difficulty,
+    });
+  };
 
   const filteredQuizzes = publishedQuizzes.filter(q =>
     q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -311,7 +331,6 @@ export default function ListeningPage() {
           {/* Tagline Header */}
           <div className="text-center mb-6">
             <h1 className="sg text-xl md:text-2xl font-bold tracking-tight mb-1 text-gray-800 flex items-center justify-center gap-2">
-              <Sparkles size={16} className="text-violet-500 animate-pulse" />
               <span>Other AI tools guess.</span>
               <span className="hero-gradient-text !from-violet-600 !to-indigo-500" style={{ WebkitTextFillColor: 'unset', background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>EnglishAI knows.</span>
             </h1>
@@ -415,7 +434,7 @@ export default function ListeningPage() {
 
       {/* Step 2: Configure */}
       {step === 'configure' && (
-        <div style={{ maxWidth: '680px' }}>
+        <div className="mx-auto w-full" style={{ maxWidth: '680px' }}>
           <div className="card" style={{ padding: '32px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(108,99,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -493,7 +512,7 @@ export default function ListeningPage() {
                       transition: 'all 0.2s', textAlign: 'left'
                     }}
                   >
-                    <span>{type.icon}</span>
+                    <type.Icon size={15} />
                     <span>{type.label}</span>
                     {selectedTypes.includes(type.id) && <CheckCircle size={14} style={{ marginLeft: 'auto' }} />}
                   </button>
@@ -509,7 +528,7 @@ export default function ListeningPage() {
                   <><div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                   AI is generating...</>
                 ) : (
-                  <>✨ Generate Exercise</>
+                  <>Generate Exercise</>
                 )}
               </button>
             </div>
@@ -596,7 +615,7 @@ export default function ListeningPage() {
 
       {/* Step 4: Results */}
       {step === 'results' && (
-        <div style={{ maxWidth: '800px' }}>
+        <div className="mx-auto w-full" style={{ maxWidth: '800px' }}>
           {/* Score Card */}
           <div style={{
             background: score >= 80
@@ -607,9 +626,6 @@ export default function ListeningPage() {
             border: `1px solid ${score >= 80 ? 'rgba(16,185,129,0.3)' : score >= 60 ? 'rgba(245,158,11,0.3)' : 'rgba(239,68,68,0.3)'}`,
             borderRadius: '20px', padding: '32px', textAlign: 'center', marginBottom: '24px'
           }}>
-            <div style={{ fontSize: '64px', marginBottom: '8px' }}>
-              {score >= 80 ? '🏆' : score >= 60 ? '📈' : '💪'}
-            </div>
             <div style={{ fontSize: '48px', fontWeight: 900, marginBottom: '8px', color: score >= 80 ? '#34d399' : score >= 60 ? '#fbbf24' : '#f87171' }}>
               {score}%
             </div>
@@ -661,11 +677,11 @@ export default function ListeningPage() {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px'
             }}>
               <div>
-                <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px' }}>Share this exercise 🚀</p>
+                <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px' }}>Share this exercise</p>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Publish this exercise for the community to practice</p>
               </div>
               <button
-                onClick={handlePublish}
+                onClick={openPublishModal}
                 disabled={isPublishing}
                 style={{
                   background: 'linear-gradient(135deg, #6c63ff, #8b5cf6)',
@@ -755,6 +771,82 @@ export default function ListeningPage() {
       {/* ── More Community Exercises ── */}
       {step === 'results' && (
         <SuggestedExercises currentType="listening" />
+      )}
+
+      {/* ── Publish Modal Popup ── */}
+      {showPublishModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fade-in-up">
+            <h3 className="text-base font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+              Publish Test to Community
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+                  Test Title
+                </label>
+                <input
+                  type="text"
+                  value={pubTitle}
+                  onChange={e => setPubTitle(e.target.value)}
+                  placeholder="e.g. TED Talk: The Future of AI"
+                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-violet-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+                  Topic / Category
+                </label>
+                <select
+                  value={pubTopic}
+                  onChange={e => setPubTopic(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-violet-500"
+                >
+                  <option value="General">General</option>
+                  <option value="Technology">Technology</option>
+                  <option value="Psychology">Psychology</option>
+                  <option value="Environment">Environment</option>
+                  <option value="Urban Planning">Urban Planning</option>
+                  <option value="Education">Education</option>
+                  <option value="Science">Science</option>
+                  <option value="Culture">Culture</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+                  Difficulty Level
+                </label>
+                <select
+                  value={pubDifficulty}
+                  onChange={e => setPubDifficulty(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-violet-500"
+                >
+                  {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map(lvl => (
+                    <option key={lvl} value={lvl}>{lvl}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-2.5 justify-end mt-6">
+              <button
+                onClick={() => setShowPublishModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmPublish}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 shadow-md"
+              >
+                Confirm & Publish
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <style>{`

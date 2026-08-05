@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { 
   Home, Headphones, BookOpen, FolderOpen, 
   User, Zap, Menu, Clock, ChevronDown, ChevronUp, FileText, Folder,
-  Sparkles
+  Sparkles, Globe
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 
@@ -124,12 +124,12 @@ export default function Sidebar() {
             </Link>
           )}
 
-          {/* My Exercises */}
-          <Link href="/exercises" className={`sidebar-item ${pathname === '/exercises' ? 'active' : ''}`}
+          {/* My Tests */}
+          <Link href="/mytests" className={`sidebar-item ${pathname === '/mytests' ? 'active' : ''}`}
             style={{ marginBottom: '4px', justifyContent: sidebarOpen ? 'flex-start' : 'center' }}
-            title={!sidebarOpen ? 'My Exercises' : undefined}>
+            title={!sidebarOpen ? 'My Tests' : undefined}>
             <FolderOpen size={20} style={{ flexShrink: 0 }} />
-            {sidebarOpen && <span style={{ fontSize: '14px', fontWeight: 500 }}>My Exercises</span>}
+            {sidebarOpen && <span style={{ fontSize: '14px', fontWeight: 500 }}>My Tests</span>}
           </Link>
 
           {/* Profile */}

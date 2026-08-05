@@ -4,7 +4,8 @@ import {
   FileText, Upload, Settings, CheckCircle, XCircle,
   Download, ChevronDown, ChevronRight, Lightbulb, RefreshCw,
   BookOpen, AlertCircle, File, Sparkles, Plus, Globe, ArrowRight,
-  Search, Share2, Users, Star, Clock, Headphones, Bookmark
+  Search, Share2, Users, Star, Clock, Headphones, Bookmark,
+  ListOrdered, CheckSquare, Link2, Edit3
 } from 'lucide-react';
 import { generateQuestions, Question } from '@/lib/store';
 import { useApp } from '@/context/AppContext';
@@ -13,11 +14,11 @@ import { PublishedQuiz, useReadingStore } from '@/store/useAppStore';
 type Step = 'input' | 'configure' | 'practice' | 'results';
 
 const QUESTION_TYPES = [
-  { id: 'multiple-choice', label: 'Multiple Choice', icon: '🔵' },
-  { id: 'gap-fill', label: 'Gap Fill', icon: '📝' },
-  { id: 'true-false', label: 'True/False', icon: '✅' },
-  { id: 'matching', label: 'Matching', icon: '🔗' },
-  { id: 'short-answer', label: 'Short Answer', icon: '✍️' },
+  { id: 'multiple-choice', label: 'Multiple Choice', Icon: ListOrdered },
+  { id: 'gap-fill', label: 'Gap Fill', Icon: FileText },
+  { id: 'true-false', label: 'True / False', Icon: CheckSquare },
+  { id: 'matching', label: 'Matching', Icon: Link2 },
+  { id: 'short-answer', label: 'Short Answer', Icon: Edit3 },
 ];
 
 const SAMPLE_PASSAGE = `Urban development has transformed cities around the world at an unprecedented pace. As populations continue to migrate from rural to urban areas, city planners face the challenge of accommodating millions of new residents while maintaining quality of life.
@@ -45,10 +46,10 @@ function SuggestedExercises({ currentType }: { currentType: 'listening' | 'readi
   }, []);
 
   const suggestions = [
-    { title: 'TED Talk: Future of AI', difficulty: 'B2', type: 'listening', qs: 10, tag: '🎧 Listening' },
-    { title: 'IELTS Reading: Climate', difficulty: 'C1', type: 'reading', qs: 15, tag: '📖 Reading' },
-    { title: 'BBC News Comprehension', difficulty: 'B1', type: 'listening', qs: 8, tag: '🎧 Listening' },
-    { title: 'Academic Vocabulary Boost', difficulty: 'B2', type: 'reading', qs: 12, tag: '📖 Reading' },
+    { title: 'TED Talk: Future of AI', difficulty: 'B2', type: 'listening', qs: 10, tag: 'Listening' },
+    { title: 'IELTS Reading: Climate', difficulty: 'C1', type: 'reading', qs: 15, tag: 'Reading' },
+    { title: 'BBC News Comprehension', difficulty: 'B1', type: 'listening', qs: 8, tag: 'Listening' },
+    { title: 'Academic Vocabulary Boost', difficulty: 'B2', type: 'reading', qs: 12, tag: 'Reading' },
   ];
 
   return (
@@ -191,7 +192,26 @@ export default function ReadingPage() {
     }
   }, [publishedQuizzes]);
 
-  const handlePublish = () => storeHandlePublish(addPublishedReadingQuiz);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [pubTitle, setPubTitle] = useState('');
+  const [pubTopic, setPubTopic] = useState('General');
+  const [pubDifficulty, setPubDifficulty] = useState(difficulty);
+
+  const openPublishModal = () => {
+    setPubTitle(`Reading Quiz – ${difficulty}`);
+    setPubTopic('General');
+    setPubDifficulty(difficulty);
+    setShowPublishModal(true);
+  };
+
+  const handleConfirmPublish = async () => {
+    setShowPublishModal(false);
+    await storeHandlePublish(addPublishedReadingQuiz, {
+      title: pubTitle || `Reading Quiz – ${pubDifficulty}`,
+      topic: pubTopic || 'General',
+      difficulty: pubDifficulty || difficulty,
+    });
+  };
 
   const filteredQuizzes = publishedQuizzes.filter(q =>
     q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -315,7 +335,6 @@ export default function ReadingPage() {
           {/* Tagline Header */}
           <div className="text-center mb-6">
             <h1 className="sg text-xl md:text-2xl font-bold tracking-tight mb-1 text-gray-800 flex items-center justify-center gap-2">
-              <Sparkles size={16} className="text-emerald-500 animate-pulse" />
               <span>Other AI tools guess.</span>
               <span className="hero-gradient-text !from-emerald-600 !to-teal-500" style={{ WebkitTextFillColor: 'unset', background: 'linear-gradient(135deg, #059669, #0d9488)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>EnglishAI knows.</span>
             </h1>
@@ -326,7 +345,7 @@ export default function ReadingPage() {
 
           {/* Mode Toggle */}
           <div className="flex bg-gray-100/60 p-0.5 rounded-xl border border-gray-100/80 w-full max-w-md mb-5 shadow-sm">
-            {[{ id: 'paste', label: '📋 Paste Text' }, { id: 'upload', label: '📎 Upload File' }].map(m => (
+            {[{ id: 'paste', label: 'Paste Text' }, { id: 'upload', label: 'Upload File' }].map(m => (
               <button
                 key={m.id}
                 onClick={() => setInputMode(m.id as 'paste' | 'upload')}
@@ -487,7 +506,7 @@ export default function ReadingPage() {
 
       {/* Step 2: Configure */}
       {step === 'configure' && (
-        <div style={{ maxWidth: '680px' }}>
+        <div className="mx-auto w-full" style={{ maxWidth: '680px' }}>
           <div className="card" style={{ padding: '32px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(108,99,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -545,7 +564,7 @@ export default function ReadingPage() {
                     cursor: 'pointer', fontSize: '13px', fontWeight: 500,
                     display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
                   }}>
-                    <span>{type.icon}</span><span>{type.label}</span>
+                    <type.Icon size={15} /><span>{type.label}</span>
                     {selectedTypes.includes(type.id) && <CheckCircle size={14} style={{ marginLeft: 'auto' }} />}
                   </button>
                 ))}
@@ -558,7 +577,7 @@ export default function ReadingPage() {
                 style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 {isLoading ? (
                   <><div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />AI is generating...</>
-                ) : '✨ Generate Exercise'}
+                ) : 'Generate Exercise'}
               </button>
             </div>
           </div>
@@ -621,13 +640,12 @@ export default function ReadingPage() {
 
       {/* Step 4: Results */}
       {step === 'results' && (
-        <div style={{ maxWidth: '800px' }}>
+        <div className="mx-auto w-full" style={{ maxWidth: '800px' }}>
           <div style={{
             background: score >= 80 ? 'linear-gradient(135deg, rgba(16,185,129,0.2), rgba(52,211,153,0.1))' : score >= 60 ? 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,191,36,0.1))' : 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(248,113,113,0.1))',
             border: `1px solid ${score >= 80 ? 'rgba(16,185,129,0.3)' : score >= 60 ? 'rgba(245,158,11,0.3)' : 'rgba(239,68,68,0.3)'}`,
             borderRadius: '20px', padding: '32px', textAlign: 'center', marginBottom: '24px'
           }}>
-            <div style={{ fontSize: '56px', marginBottom: '8px' }}>{score >= 80 ? '🏆' : score >= 60 ? '📈' : '💪'}</div>
             <div style={{ fontSize: '48px', fontWeight: 900, marginBottom: '8px', color: score >= 80 ? '#34d399' : score >= 60 ? '#fbbf24' : '#f87171' }}>{score}%</div>
             <p style={{ fontSize: '16px', color: 'var(--text-secondary)' }}>{score >= 80 ? 'Excellent! You did great!' : score >= 60 ? 'Good job! Keep going!' : 'Keep practicing!'}</p>
           </div>
@@ -645,11 +663,11 @@ export default function ReadingPage() {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px'
             }}>
               <div>
-                <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px' }}>Share this exercise 🚀</p>
+                <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px' }}>Share this exercise</p>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Publish this exercise for the community to practice</p>
               </div>
               <button
-                onClick={handlePublish}
+                onClick={openPublishModal}
                 disabled={isPublishing}
                 style={{
                   background: 'linear-gradient(135deg, #059669, #10b981)',
@@ -708,6 +726,82 @@ export default function ReadingPage() {
           <SuggestedExercises currentType="reading" />
         </div>
       )}
+      {/* ── Publish Modal Popup ── */}
+      {showPublishModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fade-in-up">
+            <h3 className="text-base font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+              🚀 Publish Test to Community
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+                  Test Title
+                </label>
+                <input
+                  type="text"
+                  value={pubTitle}
+                  onChange={e => setPubTitle(e.target.value)}
+                  placeholder="e.g. IELTS Reading: Urban Development"
+                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+                  Topic / Category
+                </label>
+                <select
+                  value={pubTopic}
+                  onChange={e => setPubTopic(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-emerald-500"
+                >
+                  <option value="General">General</option>
+                  <option value="Urban Planning">Urban Planning</option>
+                  <option value="Technology">Technology</option>
+                  <option value="Environment">Environment</option>
+                  <option value="Psychology">Psychology</option>
+                  <option value="Education">Education</option>
+                  <option value="Science">Science</option>
+                  <option value="Culture">Culture</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+                  Difficulty Level
+                </label>
+                <select
+                  value={pubDifficulty}
+                  onChange={e => setPubDifficulty(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-emerald-500"
+                >
+                  {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map(lvl => (
+                    <option key={lvl} value={lvl}>{lvl}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-2.5 justify-end mt-6">
+              <button
+                onClick={() => setShowPublishModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmPublish}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md"
+              >
+                Confirm & Publish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );

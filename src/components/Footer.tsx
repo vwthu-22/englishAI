@@ -74,17 +74,17 @@ export default function Footer() {
         <div className="flex flex-col gap-4">
           <h4 className="font-bold text-gray-800 mb-0.5 uppercase tracking-wider text-[10px]">App & Trust</h4>
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-gray-100 shadow-sm max-w-[180px]">
-              <Award size={18} className="text-amber-500 shrink-0" />
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-100/60 border border-gray-200/50 max-w-[180px]">
+              <Award size={16} className="text-amber-500 shrink-0" />
               <div className="min-w-0">
-                <p className="font-bold text-gray-800 text-[10px] truncate">10,000+ Reviews</p>
-                <p className="text-[9px] text-gray-400">Excellent 4.8/5.0 rating</p>
+                <p className="font-semibold text-gray-700 text-[10px] truncate">10,000+ Reviews</p>
+                <p className="text-[9px] text-gray-400">100% Verified Community</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-gray-100 shadow-sm max-w-[180px]">
-              <Shield size={18} className="text-emerald-500 shrink-0" />
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-100/60 border border-gray-200/50 max-w-[180px]">
+              <Shield size={16} className="text-emerald-500 shrink-0" />
               <div className="min-w-0">
-                <p className="font-bold text-gray-800 text-[10px] truncate">Secure Platform</p>
+                <p className="font-semibold text-gray-700 text-[10px] truncate">Secure Platform</p>
                 <p className="text-[9px] text-gray-400">100% GDPR Compliant</p>
               </div>
             </div>

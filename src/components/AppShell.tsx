@@ -12,7 +12,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   '/': { title: 'Dashboard', subtitle: 'Overview of your learning progress' },
   '/listening': { title: 'Listening Practice', subtitle: 'Improve your listening skills with YouTube videos' },
   '/reading': { title: 'Reading Practice', subtitle: 'Boost your reading skills with IELTS-standard exercises' },
-  '/exercises': { title: 'My Exercises', subtitle: 'Manage and review your completed exercises' },
+  '/mytests': { title: 'My Tests', subtitle: 'Manage your created quizzes, saved tests, and test history' },
   '/profile': { title: 'Profile', subtitle: 'Personal information and statistics' },
   '/about': { title: 'About Us', subtitle: 'Learn more about EnglishAI' },
 };

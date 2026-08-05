@@ -1,7 +1,7 @@
 'use client';
 import { create } from 'zustand';
 import { generateQuestions, Question } from '@/lib/store';
-import { PublishedQuiz } from './useQuizStore';
+import { PublishedQuiz, useQuizStore } from './useQuizStore';
 
 type Step = 'input' | 'configure' | 'practice' | 'results';
 
@@ -43,7 +43,7 @@ interface ListeningState {
   handleSubmit: () => void;
   handleReset: () => void;
   handleTakePublished: (quiz: PublishedQuiz) => void;
-  handlePublish: (addPublishedListeningQuiz: (quiz: PublishedQuiz) => void) => Promise<void>;
+  handlePublish: (addPublishedListeningQuiz: (quiz: PublishedQuiz) => void, meta?: { title?: string; topic?: string; difficulty?: string }) => Promise<void>;
 }
 
 const extractVideoId = (url: string) => {
@@ -119,7 +119,7 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
   },
 
   handleSubmit: () => {
-    const { questions, answers } = get();
+    const { questions, answers, difficulty } = get();
     let correct = 0;
     questions.forEach((q) => {
       const userAnswer = answers[q.id] || '';
@@ -131,10 +131,24 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
         correct++;
       }
     });
+    const calculatedScore = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
     set({
-      score: Math.round((correct / questions.length) * 100),
+      score: calculatedScore,
       showResults: true,
       step: 'results',
+    });
+
+    const now = new Date();
+    const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    useQuizStore.getState().addCompletedTest({
+      id: 'hist-' + Date.now(),
+      title: `Listening Practice (${difficulty})`,
+      type: 'listening',
+      score: calculatedScore,
+      totalQuestions: questions.length,
+      correctAnswers: correct,
+      completedAt: formattedDate,
+      difficulty: difficulty,
     });
   },
 
@@ -165,21 +179,24 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
     });
   },
 
-  handlePublish: async (addPublishedListeningQuiz) => {
+  handlePublish: async (addPublishedListeningQuiz, meta?: { title?: string; topic?: string; difficulty?: string }) => {
     const { difficulty, videoId, youtubeUrl, questions } = get();
     set({ isPublishing: true });
     await new Promise((r) => setTimeout(r, 1200));
     const quiz: PublishedQuiz = {
       id: Date.now().toString(),
-      title: `Listening Quiz – ${difficulty}`,
+      title: meta?.title || `Listening Quiz – ${meta?.difficulty || difficulty}`,
+      type: 'listening',
+      topic: meta?.topic || 'General',
       videoId,
       youtubeUrl,
       questions,
-      difficulty,
+      difficulty: meta?.difficulty || difficulty,
       questionCount: questions.length,
       author: 'You',
       publishedAt: new Date().toLocaleDateString('vi-VN'),
       plays: 0,
+      likes: 0,
       rating: 4.5,
     };
     addPublishedListeningQuiz(quiz);

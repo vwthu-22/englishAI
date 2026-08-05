@@ -1,7 +1,7 @@
 'use client';
 import { create } from 'zustand';
 import { generateQuestions, Question } from '@/lib/store';
-import { PublishedQuiz } from './useQuizStore';
+import { PublishedQuiz, useQuizStore } from './useQuizStore';
 
 type Step = 'input' | 'configure' | 'practice' | 'results';
 
@@ -44,7 +44,7 @@ interface ReadingState {
   handleSubmit: () => void;
   handleReset: () => void;
   handleTakePublished: (quiz: PublishedQuiz) => void;
-  handlePublish: (addPublishedReadingQuiz: (quiz: PublishedQuiz) => void) => Promise<void>;
+  handlePublish: (addPublishedReadingQuiz: (quiz: PublishedQuiz) => void, meta?: { title?: string; topic?: string; difficulty?: string }) => Promise<void>;
 }
 
 export const useReadingStore = create<ReadingState>((set, get) => ({
@@ -117,7 +117,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
   },
 
   handleSubmit: () => {
-    const { questions, answers } = get();
+    const { questions, answers, difficulty } = get();
     let correct = 0;
     questions.forEach((q) => {
       const userAnswer = answers[q.id] || '';
@@ -129,9 +129,23 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
         correct++;
       }
     });
+    const calculatedScore = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
     set({
-      score: Math.round((correct / questions.length) * 100),
+      score: calculatedScore,
       step: 'results',
+    });
+
+    const now = new Date();
+    const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    useQuizStore.getState().addCompletedTest({
+      id: 'hist-' + Date.now(),
+      title: `Reading Practice (${difficulty})`,
+      type: 'reading',
+      score: calculatedScore,
+      totalQuestions: questions.length,
+      correctAnswers: correct,
+      completedAt: formattedDate,
+      difficulty: difficulty,
     });
   },
 
@@ -159,19 +173,23 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
     });
   },
 
-  handlePublish: async (addPublishedReadingQuiz) => {
+  handlePublish: async (addPublishedReadingQuiz, meta?: { title?: string; topic?: string; difficulty?: string }) => {
     const { difficulty, passage, questions } = get();
     set({ isPublishing: true });
     await new Promise((r) => setTimeout(r, 1200));
     const quiz: PublishedQuiz = {
       id: Date.now().toString(),
-      title: `Reading Quiz – ${difficulty}`,
+      title: meta?.title || `Reading Quiz – ${meta?.difficulty || difficulty}`,
+      type: 'reading',
+      topic: meta?.topic || 'General',
       passage,
       questions,
-      difficulty,
+      difficulty: meta?.difficulty || difficulty,
       questionCount: questions.length,
       author: 'You',
       publishedAt: new Date().toLocaleDateString('vi-VN'),
+      plays: 0,
+      likes: 0,
       rating: 4.5,
     };
     addPublishedReadingQuiz(quiz);
