@@ -55,10 +55,3 @@ Thumbs.db
 # Project guides & metadata
 AGENTS.md
 hươngdan.md
-README.md
-eslint.config.mjs
-next.config.ts
-package-lock.json
-package.json
-postcss.config.mjs
-tsconfig.json
