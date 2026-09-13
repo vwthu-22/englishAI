@@ -11,6 +11,7 @@ import { useListeningStore } from '@/store/useListeningStore';
 import { useBookmarkStore } from '@/store/useBookmarkStore';
 import { useQuizStore } from '@/store/useQuizStore';
 import SuggestedExercises from '@/components/SuggestedExercises';
+import { sampleAudios } from '@/lib/mock/data';
 
 const DIFFICULTY_LEVELS = ['A2', 'B1', 'B2', 'C1', 'Easy', 'Medium', 'Hard'];
 const QUESTION_TYPES = [
@@ -19,12 +20,6 @@ const QUESTION_TYPES = [
   { id: 'true-false', label: 'True / False', Icon: CheckSquare },
   { id: 'matching', label: 'Matching', Icon: Link2 },
   { id: 'short-answer', label: 'Short Answer', Icon: Edit3 },
-];
-
-const SAMPLE_AUDIOS = [
-  { title: 'IELTS Listening Practice Test 1', duration: '30 mins', difficulty: 'B2', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-  { title: 'BBC 6 Minute English – AI & Jobs', duration: '6 mins', difficulty: 'B1', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
-  { title: 'TED Talk Audio: Power of Introverts', duration: '12 mins', difficulty: 'C1', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
 ];
 
 export default function ListeningPage() {
@@ -300,7 +295,7 @@ export default function ListeningPage() {
               <div className="flex-1 h-px bg-gray-100" />
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {SAMPLE_AUDIOS.map(ex => (
+              {sampleAudios.map(ex => (
                 <div
                   key={ex.title}
                   onClick={() => { setAudioUrl(ex.url); setFileName(ex.title); setInputMode('url'); }}

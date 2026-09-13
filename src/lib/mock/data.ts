@@ -305,3 +305,67 @@ export const seedCompletedTests: CompletedTest[] = [
     difficulty: 'C1',
   },
 ];
+
+export interface SamplePassage {
+  title: string;
+  passage: string;
+  words: string;
+  difficulty: string;
+}
+
+export const samplePassages: SamplePassage[] = [
+  {
+    title: 'Urban Development & Smart Cities',
+    words: '280 words',
+    difficulty: 'B2',
+    passage: `Urban development has transformed cities around the world at an unprecedented pace. As populations continue to migrate from rural to urban areas, city planners face the challenge of accommodating millions of new residents while maintaining quality of life.
+
+The concept of sustainable urban development has emerged as a key framework for addressing these challenges. This approach seeks to balance economic growth, environmental protection, and social equity. Cities like Singapore, Copenhagen, and Medellín have become global models for innovative urban planning, demonstrating that rapid development need not come at the expense of livability.
+
+Green infrastructure plays a crucial role in sustainable cities. Urban forests, green roofs, and parks not only improve air quality and reduce the urban heat island effect, but also provide residents with vital recreational spaces. Research has consistently shown that access to green space improves mental health outcomes and strengthens community bonds.
+
+Transportation networks are another critical consideration. Cities that invest heavily in public transit, cycling infrastructure, and pedestrian-friendly streetscapes tend to see reduced traffic congestion, lower carbon emissions, and improved public health. The shift away from car-centric planning represents one of the most significant transformations in urban design thinking.
+
+Housing affordability remains one of the most pressing issues facing growing cities. As demand outpaces supply in desirable urban areas, prices rise and lower-income residents face displacement. Innovative solutions including community land trusts, inclusionary zoning, and modular construction are being explored as potential remedies.`,
+  },
+  {
+    title: 'Climate Change & Ecosystems',
+    words: '120 words',
+    difficulty: 'C1',
+    passage: 'Climate change represents one of the defining challenges of our time. Rising global temperatures, driven primarily by human greenhouse gas emissions, are causing glaciers to melt, sea levels to rise, and weather patterns to become increasingly volatile. Ecosystems around the world are struggling to adapt to these rapid shifts, leading to changes in species distributions and placing biodiversity at risk. Solutions must incorporate both mitigation policies and local adaptation planning.',
+  },
+  {
+    title: 'The Evolution of English Education',
+    words: '95 words',
+    difficulty: 'B2',
+    passage: 'The methods of teaching English as a second language have undergone dramatic modifications in the digital age. Moving away from rote grammar translation, modern educators leverage interactive software, peer dialogue, and real-time AI conversation partners. This shifts focus toward communicative competence and active speaking practice, which increases student motivation and accelerates fluency development.',
+  },
+];
+
+export interface SampleAudio {
+  title: string;
+  duration: string;
+  difficulty: string;
+  url: string;
+}
+
+export const sampleAudios: SampleAudio[] = [
+  {
+    title: 'IELTS Listening Practice Test 1',
+    duration: '30 mins',
+    difficulty: 'B2',
+    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+  },
+  {
+    title: 'BBC 6 Minute English – AI & Jobs',
+    duration: '6 mins',
+    difficulty: 'B1',
+    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+  },
+  {
+    title: 'TED Talk Audio: Power of Introverts',
+    duration: '12 mins',
+    difficulty: 'C1',
+    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+  },
+];

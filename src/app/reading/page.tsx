@@ -11,6 +11,7 @@ import { useReadingStore } from '@/store/useReadingStore';
 import { useQuizStore } from '@/store/useQuizStore';
 import { useBookmarkStore } from '@/store/useBookmarkStore';
 import SuggestedExercises from '@/components/SuggestedExercises';
+import { samplePassages } from '@/lib/mock/data';
 
 const QUESTION_TYPES = [
   { id: 'multiple-choice', label: 'Multiple Choice', Icon: ListOrdered },
@@ -19,16 +20,6 @@ const QUESTION_TYPES = [
   { id: 'matching', label: 'Matching', Icon: Link2 },
   { id: 'short-answer', label: 'Short Answer', Icon: Edit3 },
 ];
-
-const SAMPLE_PASSAGE = `Urban development has transformed cities around the world at an unprecedented pace. As populations continue to migrate from rural to urban areas, city planners face the challenge of accommodating millions of new residents while maintaining quality of life.
-
-The concept of sustainable urban development has emerged as a key framework for addressing these challenges. This approach seeks to balance economic growth, environmental protection, and social equity. Cities like Singapore, Copenhagen, and Medellín have become global models for innovative urban planning, demonstrating that rapid development need not come at the expense of livability.
-
-Green infrastructure plays a crucial role in sustainable cities. Urban forests, green roofs, and parks not only improve air quality and reduce the urban heat island effect, but also provide residents with vital recreational spaces. Research has consistently shown that access to green space improves mental health outcomes and strengthens community bonds.
-
-Transportation networks are another critical consideration. Cities that invest heavily in public transit, cycling infrastructure, and pedestrian-friendly streetscapes tend to see reduced traffic congestion, lower carbon emissions, and improved public health. The shift away from car-centric planning represents one of the most significant transformations in urban design thinking.
-
-Housing affordability remains one of the most pressing issues facing growing cities. As demand outpaces supply in desirable urban areas, prices rise and lower-income residents face displacement. Innovative solutions including community land trusts, inclusionary zoning, and modular construction are being explored as potential remedies.`;
 
 export default function ReadingPage() {
   const { toggleBookmark, isBookmarked } = useBookmarkStore();
@@ -253,7 +244,7 @@ export default function ReadingPage() {
                     <Plus size={10} /> Add Text Passage
                   </span>
                   <button
-                    onClick={() => setPassage(SAMPLE_PASSAGE)}
+                    onClick={() => setPassage(samplePassages[0]?.passage || '')}
                     className="text-[10px] text-emerald-600 hover:underline bg-transparent border-none cursor-pointer font-semibold"
                   >
                     Use Sample Passage
@@ -350,11 +341,7 @@ export default function ReadingPage() {
               <div className="flex-1 h-px bg-gray-100" />
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {[
-                { title: 'Urban Development & Smart Cities', passage: SAMPLE_PASSAGE, words: '280 words', difficulty: 'B2' },
-                { title: 'Climate Change & Ecosystems', passage: 'Climate change represents one of the defining challenges of our time. Rising global temperatures, driven primarily by human greenhouse gas emissions, are causing glaciers to melt, sea levels to rise, and weather patterns to become increasingly volatile. Ecosystems around the world are struggling to adapt to these rapid shifts, leading to changes in species distributions and placing biodiversity at risk. Solutions must incorporate both mitigation policies and local adaptation planning.', words: '120 words', difficulty: 'C1' },
-                { title: 'The Evolution of English Education', passage: 'The methods of teaching English as a second language have undergone dramatic modifications in the digital age. Moving away from rote grammar translation, modern educators leverage interactive software, peer dialogue, and real-time AI conversation partners. This shifts focus toward communicative competence and active speaking practice, which increases student motivation and accelerates fluency development.', words: '95 words', difficulty: 'B2' },
-              ].map(ex => (
+              {samplePassages.map(ex => (
                 <div
                   key={ex.title}
                   onClick={() => {
