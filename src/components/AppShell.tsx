@@ -1,8 +1,11 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
-import { useApp } from '@/context/AppContext';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useUiStore } from '@/store/useUiStore';
+import { useBookmarkStore } from '@/store/useBookmarkStore';
+import { useQuizStore } from '@/store/useQuizStore';
 import AuthModal from './AuthModal';
 import LandingPage from './LandingPage';
 import Footer from './Footer';
@@ -18,8 +21,16 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
 };
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn, sidebarOpen } = useApp();
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const sidebarOpen = useUiStore((s) => s.sidebarOpen);
+  const loadBookmarks = useBookmarkStore((s) => s.loadBookmarks);
+  const loadPublishedQuizzes = useQuizStore((s) => s.loadPublishedQuizzes);
   const pathname = usePathname();
+
+  useEffect(() => {
+    loadBookmarks();
+    loadPublishedQuizzes();
+  }, []);
 
   const pageInfo = pageTitles[pathname] || { title: 'EnglishAI', subtitle: '' };
 

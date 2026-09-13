@@ -7,7 +7,7 @@ import {
   RotateCcw,
   CheckCircle
 } from 'lucide-react';
-import { useApp } from '@/context/AppContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useQuizStore, PublishedQuiz, CompletedTest } from '@/store/useQuizStore';
 import { defaultQuizzes } from '@/lib/store';
 import Link from 'next/link';
@@ -118,7 +118,7 @@ const SEED_COMPLETED_TESTS: CompletedTest[] = [
 type FilterType = 'all' | 'listening' | 'reading';
 
 export default function MyTestsPage() {
-  const { user } = useApp();
+  const user = useAuthStore((s) => s.user);
   const { publishedListeningQuizzes, publishedReadingQuizzes, completedTests, likedIds, toggleLike } = useQuizStore();
 
   const [mainTab, setMainTab] = useState<'posted' | 'history'>('posted');

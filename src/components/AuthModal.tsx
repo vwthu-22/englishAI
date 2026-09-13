@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, Eye, EyeOff, Zap } from 'lucide-react';
-import { useApp } from '@/context/AppContext';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface AuthModalProps {
   onClose: () => void;
@@ -14,7 +14,7 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const { login } = useApp();
+  const login = useAuthStore((s) => s.login);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

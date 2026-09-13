@@ -8,8 +8,9 @@ import {
   ListOrdered, CheckSquare, Link2, Edit3
 } from 'lucide-react';
 import { generateQuestions, Question } from '@/lib/store';
-import { useApp } from '@/context/AppContext';
 import { PublishedQuiz, useReadingStore } from '@/store/useAppStore';
+import { useBookmarkStore } from '@/store/useBookmarkStore';
+import { useQuizStore } from '@/store/useQuizStore';
 
 type Step = 'input' | 'configure' | 'practice' | 'results';
 
@@ -144,12 +145,9 @@ function SuggestedExercises({ currentType }: { currentType: 'listening' | 'readi
 }
 
 export default function ReadingPage() {
-  const { 
-    toggleBookmark, 
-    isBookmarked, 
-    publishedReadingQuizzes: publishedQuizzes, 
-    addPublishedReadingQuiz 
-  } = useApp();
+  const { toggleBookmark, isBookmarked } = useBookmarkStore();
+  const publishedQuizzes = useQuizStore((s) => s.publishedReadingQuizzes);
+  const addPublishedReadingQuiz = useQuizStore((s) => s.addPublishedReadingQuiz);
 
   const {
     mode, searchQuery, isPublished, isPublishing, step,

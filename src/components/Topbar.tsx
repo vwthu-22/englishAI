@@ -1,7 +1,8 @@
 'use client';
 import React, { useState } from 'react';
 import { Bell, Search, Menu, ChevronDown, LogOut, Settings, User as UserIcon } from 'lucide-react';
-import { useApp } from '@/context/AppContext';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useUiStore } from '@/store/useUiStore';
 
 interface TopbarProps {
   title: string;
@@ -9,7 +10,8 @@ interface TopbarProps {
 }
 
 export default function Topbar({ title, subtitle }: TopbarProps) {
-  const { setSidebarOpen, sidebarOpen, user, logout } = useApp();
+  const { user, logout } = useAuthStore();
+  const { sidebarOpen, setSidebarOpen } = useUiStore();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (

@@ -7,10 +7,14 @@ import {
   User, Zap, Menu, Clock, ChevronDown, ChevronUp, FileText, Folder,
   Sparkles, Globe
 } from 'lucide-react';
-import { useApp } from '@/context/AppContext';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useUiStore } from '@/store/useUiStore';
+import { useExerciseStore } from '@/store/useExerciseStore';
 
 export default function Sidebar() {
-  const { user, sidebarOpen, setSidebarOpen, exercises } = useApp();
+  const user = useAuthStore((s) => s.user);
+  const { sidebarOpen, setSidebarOpen } = useUiStore();
+  const exercises = useExerciseStore((s) => s.exercises);
   const pathname = usePathname();
   const [recentOpen, setRecentOpen] = React.useState(true);
   const [quizOpen, setQuizOpen] = React.useState(true);

@@ -8,8 +8,9 @@ import {
   ListOrdered, FileText, CheckSquare, Link2, Edit3
 } from 'lucide-react';
 import { generateQuestions, Question } from '@/lib/store';
-import { useApp } from '@/context/AppContext';
 import { PublishedQuiz, useListeningStore } from '@/store/useAppStore';
+import { useBookmarkStore } from '@/store/useBookmarkStore';
+import { useQuizStore } from '@/store/useQuizStore';
 
 type Step = 'input' | 'configure' | 'practice' | 'results';
 
@@ -140,12 +141,9 @@ function SuggestedExercises({ currentType }: { currentType: 'listening' | 'readi
 }
 
 export default function ListeningPage() {
-  const { 
-    toggleBookmark, 
-    isBookmarked, 
-    publishedListeningQuizzes: publishedQuizzes, 
-    addPublishedListeningQuiz 
-  } = useApp();
+  const { toggleBookmark, isBookmarked } = useBookmarkStore();
+  const publishedQuizzes = useQuizStore((s) => s.publishedListeningQuizzes);
+  const addPublishedListeningQuiz = useQuizStore((s) => s.addPublishedListeningQuiz);
 
   const {
     mode, searchQuery, isPublished, isPublishing, step,

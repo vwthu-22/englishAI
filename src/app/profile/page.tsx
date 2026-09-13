@@ -5,7 +5,8 @@ import {
   Target, Edit3, Save, X, Camera, TrendingUp, Star, Award,
   Clock, Zap
 } from 'lucide-react';
-import { useApp } from '@/context/AppContext';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useExerciseStore } from '@/store/useExerciseStore';
 import { useStatsStore } from '@/store/useStatsStore';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -29,7 +30,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function ProfilePage() {
-  const { user, exercises } = useApp();
+  const user = useAuthStore((s) => s.user);
+  const exercises = useExerciseStore((s) => s.exercises);
   const weeklyData = useStatsStore((state) => state.weeklyData);
   const monthlyProgress = useStatsStore((state) => state.monthlyProgress);
 

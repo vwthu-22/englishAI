@@ -8,7 +8,7 @@ import {
 import AuthModal from './AuthModal';
 import { useQuizStore } from '@/store/useQuizStore';
 import { QuizItem, defaultQuizzes } from '@/lib/store';
-import { useApp } from '@/context/AppContext';
+import { useAuthStore } from '@/store/useAuthStore';
 import Link from 'next/link';
 
 
@@ -26,7 +26,7 @@ const tags = [
 ];
 
 export default function LandingPage() {
-  const { isLoggedIn } = useApp();
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [searchQuery, setSearchQuery] = useState('');

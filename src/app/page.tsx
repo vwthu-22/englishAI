@@ -5,7 +5,8 @@ import {
   Clock, Star, TrendingUp, Flame, Sparkles, Globe, Heart, Play,
   X, ArrowLeft, Zap, Trophy, Filter
 } from 'lucide-react';
-import { useApp } from '@/context/AppContext';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useExerciseStore } from '@/store/useExerciseStore';
 import { useQuizStore, PublishedQuiz } from '@/store/useQuizStore';
 import { defaultQuizzes } from '@/lib/store';
 import Link from 'next/link';
@@ -30,7 +31,8 @@ type FilterType = 'all' | 'listening' | 'reading';
 type SortType = 'popular' | 'newest' | 'most-liked';
 
 export default function HomePage() {
-  const { user, exercises } = useApp();
+  const user = useAuthStore((s) => s.user);
+  const exercises = useExerciseStore((s) => s.exercises);
   const { publishedListeningQuizzes, publishedReadingQuizzes, likedIds, toggleLike } = useQuizStore();
 
   const [searchQuery, setSearchQuery] = useState('');
