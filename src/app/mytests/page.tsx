@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useQuizStore, PublishedQuiz, CompletedTest } from '@/store/useQuizStore';
-import { defaultQuizzes } from '@/lib/store';
+import { defaultQuizzes } from '@/lib/mock/data';
 import Link from 'next/link';
 
 /* Seed tests for "My Tests" if user hasn't published custom ones yet */

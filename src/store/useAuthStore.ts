@@ -1,6 +1,7 @@
 'use client';
 import { create } from 'zustand';
-import { User, mockUser } from '@/lib/store';
+import { User } from '@/types';
+import { mockUser } from '@/lib/mock/data';
 
 interface AuthState {
   user: User | null;

@@ -1,6 +1,7 @@
 'use client';
 import { create } from 'zustand';
-import { Exercise, mockExercises } from '@/lib/store';
+import { Exercise } from '@/types';
+import { mockExercises } from '@/lib/mock/data';
 
 interface ExerciseState {
   exercises: Exercise[];

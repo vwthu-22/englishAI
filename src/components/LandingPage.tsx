@@ -7,7 +7,8 @@ import {
 } from 'lucide-react';
 import AuthModal from './AuthModal';
 import { useQuizStore } from '@/store/useQuizStore';
-import { QuizItem, defaultQuizzes } from '@/lib/store';
+import { QuizItem } from '@/types';
+import { defaultQuizzes } from '@/lib/mock/data';
 import { useAuthStore } from '@/store/useAuthStore';
 import Link from 'next/link';
 

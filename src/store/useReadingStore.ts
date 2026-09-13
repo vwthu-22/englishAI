@@ -1,7 +1,8 @@
 'use client';
 import { create } from 'zustand';
-import { generateQuestions, Question } from '@/lib/store';
+import { Question } from '@/types';
 import { PublishedQuiz, useQuizStore } from './useQuizStore';
+import { questionService } from '@/services/questionService';
 
 type Step = 'input' | 'configure' | 'practice' | 'results';
 
@@ -105,15 +106,10 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
   },
 
   handleGenerate: async () => {
-    const { questionCount, selectedTypes, difficulty } = get();
+    const { questionCount, selectedTypes, difficulty, passage } = get();
     set({ isLoading: true });
-    await new Promise((r) => setTimeout(r, 1500));
-    const generated = generateQuestions(questionCount, selectedTypes[0], difficulty);
-    set({
-      questions: generated,
-      isLoading: false,
-      step: 'practice',
-    });
+    const generated = await questionService.generate({ count: questionCount, difficulty, types: selectedTypes, passage });
+    set({ questions: generated, isLoading: false, step: 'practice' });
   },
 
   handleSubmit: () => {

@@ -7,7 +7,8 @@ import {
   Clock, Globe, Filter
 } from 'lucide-react';
 import { useQuizStore, PublishedQuiz } from '@/store/useQuizStore';
-import { defaultQuizzes, QuizItem } from '@/lib/store';
+import { QuizItem } from '@/types';
+import { defaultQuizzes } from '@/lib/mock/data';
 
 /* ─── Mock community quizzes seeded from defaultQuizzes ─── */
 const SEED_COMMUNITY: PublishedQuiz[] = defaultQuizzes.map((q, i) => ({

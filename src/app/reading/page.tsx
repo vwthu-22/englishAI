@@ -7,7 +7,7 @@ import {
   Search, Share2, Users, Star, Clock, Headphones, Bookmark,
   ListOrdered, CheckSquare, Link2, Edit3
 } from 'lucide-react';
-import { generateQuestions, Question } from '@/lib/store';
+import { Question } from '@/types';
 import { PublishedQuiz, useReadingStore } from '@/store/useAppStore';
 import { useBookmarkStore } from '@/store/useBookmarkStore';
 import { useQuizStore } from '@/store/useQuizStore';

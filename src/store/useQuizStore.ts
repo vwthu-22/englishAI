@@ -1,6 +1,7 @@
 'use client';
 import { create } from 'zustand';
-import { QuizItem, Question, defaultQuizzes } from '@/lib/store';
+import { QuizItem, Question } from '@/types';
+import { defaultQuizzes } from '@/lib/mock/data';
 
 export interface PublishedQuiz {
   id: string;

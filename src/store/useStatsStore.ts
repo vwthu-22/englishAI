@@ -1,6 +1,6 @@
 'use client';
 import { create } from 'zustand';
-import { mockWeeklyData, mockMonthlyProgress } from '@/lib/store';
+import { mockWeeklyData, mockMonthlyProgress } from '@/lib/mock/data';
 
 interface StatsState {
   weeklyData: typeof mockWeeklyData;

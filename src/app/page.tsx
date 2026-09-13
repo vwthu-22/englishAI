@@ -8,7 +8,7 @@ import {
 import { useAuthStore } from '@/store/useAuthStore';
 import { useExerciseStore } from '@/store/useExerciseStore';
 import { useQuizStore, PublishedQuiz } from '@/store/useQuizStore';
-import { defaultQuizzes } from '@/lib/store';
+import { defaultQuizzes } from '@/lib/mock/data';
 import Link from 'next/link';
 
 /* ─── Mock community quizzes seeded from defaultQuizzes ─── */
