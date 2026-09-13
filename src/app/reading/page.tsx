@@ -3,16 +3,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   FileText, Upload, Settings, CheckCircle, XCircle,
   Download, ChevronDown, ChevronRight, Lightbulb, RefreshCw,
-  BookOpen, AlertCircle, File, Sparkles, Plus, Globe, ArrowRight,
-  Search, Share2, Users, Star, Clock, Headphones, Bookmark,
+  BookOpen, AlertCircle, Sparkles, Plus, ArrowRight,
+  Search, Share2, Bookmark, Globe, Users, Star, Clock,
   ListOrdered, CheckSquare, Link2, Edit3
 } from 'lucide-react';
-import { Question } from '@/types';
-import { PublishedQuiz, useReadingStore } from '@/store/useAppStore';
-import { useBookmarkStore } from '@/store/useBookmarkStore';
+import { useReadingStore } from '@/store/useReadingStore';
 import { useQuizStore } from '@/store/useQuizStore';
-
-type Step = 'input' | 'configure' | 'practice' | 'results';
+import { useBookmarkStore } from '@/store/useBookmarkStore';
+import SuggestedExercises from '@/components/SuggestedExercises';
 
 const QUESTION_TYPES = [
   { id: 'multiple-choice', label: 'Multiple Choice', Icon: ListOrdered },
@@ -32,118 +30,6 @@ Transportation networks are another critical consideration. Cities that invest h
 
 Housing affordability remains one of the most pressing issues facing growing cities. As demand outpaces supply in desirable urban areas, prices rise and lower-income residents face displacement. Innovative solutions including community land trusts, inclusionary zoning, and modular construction are being explored as potential remedies.`;
 
-// ── Suggested Exercises Component ──────────────────────────────────────────
-function SuggestedExercises({ currentType }: { currentType: 'listening' | 'reading' }) {
-  const [communityQuizzes, setCommunityQuizzes] = useState<any[]>([]);
-
-  useEffect(() => {
-    const listening = JSON.parse(localStorage.getItem('published_listening_quizzes') || '[]');
-    const reading = JSON.parse(localStorage.getItem('published_reading_quizzes') || '[]');
-    const all = [
-      ...listening.map((q: any) => ({ ...q, moduleType: 'listening' })),
-      ...reading.map((q: any) => ({ ...q, moduleType: 'reading' })),
-    ].sort(() => Math.random() - 0.5).slice(0, 4);
-    setCommunityQuizzes(all);
-  }, []);
-
-  const suggestions = [
-    { title: 'TED Talk: Future of AI', difficulty: 'B2', type: 'listening', qs: 10, tag: 'Listening' },
-    { title: 'IELTS Reading: Climate', difficulty: 'C1', type: 'reading', qs: 15, tag: 'Reading' },
-    { title: 'BBC News Comprehension', difficulty: 'B1', type: 'listening', qs: 8, tag: 'Listening' },
-    { title: 'Academic Vocabulary Boost', difficulty: 'B2', type: 'reading', qs: 12, tag: 'Reading' },
-  ];
-
-  return (
-    <div style={{ marginTop: '32px', borderTop: '1px solid #f1f3f6', paddingTop: '32px' }}>
-      {/* Try Next */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Try Next</h3>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>AI-curated exercises based on your level</p>
-          </div>
-        </div>
-        <div className="suggested-exercises-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
-          {suggestions.map((s, i) => (
-            <a key={i} href={s.type === 'listening' ? '/listening' : '/reading'} style={{ textDecoration: 'none' }}>
-              <div className="card p-4 group" style={{ cursor: 'pointer', transition: 'all 0.2s' }}>
-                <div style={{
-                  width: '38px', height: '38px', borderRadius: '10px', marginBottom: '10px',
-                  background: s.type === 'listening' ? 'rgba(108,99,255,0.1)' : 'rgba(16,185,129,0.1)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
-                  {s.type === 'listening'
-                    ? <Headphones size={17} color="#a78bfa" />
-                    : <BookOpen size={17} color="#34d399" />}
-                </div>
-                <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px', lineHeight: 1.3 }}>{s.title}</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                  <span style={{
-                    fontSize: '10px', fontWeight: 600, padding: '2px 7px', borderRadius: '20px',
-                    background: s.type === 'listening' ? 'rgba(108,99,255,0.08)' : 'rgba(16,185,129,0.08)',
-                    color: s.type === 'listening' ? '#a78bfa' : '#34d399',
-                    border: `1px solid ${s.type === 'listening' ? 'rgba(108,99,255,0.2)' : 'rgba(16,185,129,0.2)'}`
-                  }}>{s.difficulty}</span>
-                  <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{s.qs} Qs</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, color: s.type === 'listening' ? '#a78bfa' : '#34d399' }}>
-                  Start <ArrowRight size={11} />
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {/* Community Exercises */}
-      {communityQuizzes.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>From the Community</h3>
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Exercises shared by other learners</p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--text-muted)' }}>
-              <Users size={12} /> Community picks
-            </div>
-          </div>
-          <div className="suggested-exercises-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
-            {communityQuizzes.map((quiz, i) => {
-              const isL = quiz.moduleType === 'listening';
-              return (
-                <a key={i} href={isL ? '/listening' : '/reading'} style={{ textDecoration: 'none' }}>
-                  <div className="card p-4 group" style={{ cursor: 'pointer', transition: 'all 0.2s' }}>
-                    <div style={{
-                      width: '38px', height: '38px', borderRadius: '10px', marginBottom: '10px',
-                      background: isL ? 'rgba(108,99,255,0.1)' : 'rgba(16,185,129,0.1)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}>
-                      {isL ? <Headphones size={17} color="#a78bfa" /> : <BookOpen size={17} color="#34d399" />}
-                    </div>
-                    <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{quiz.title}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                      <span style={{
-                        fontSize: '10px', fontWeight: 600, padding: '2px 7px', borderRadius: '20px',
-                        background: isL ? 'rgba(108,99,255,0.08)' : 'rgba(16,185,129,0.08)',
-                        color: isL ? '#a78bfa' : '#34d399',
-                        border: `1px solid ${isL ? 'rgba(108,99,255,0.2)' : 'rgba(16,185,129,0.2)'}`
-                      }}>{quiz.difficulty}</span>
-                      {quiz.questionCount && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{quiz.questionCount} Qs</span>}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, color: isL ? '#a78bfa' : '#34d399' }}>
-                      Start quiz <ArrowRight size={11} />
-                    </div>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function ReadingPage() {
   const { toggleBookmark, isBookmarked } = useBookmarkStore();
   const publishedQuizzes = useQuizStore((s) => s.publishedReadingQuizzes);
@@ -155,8 +41,7 @@ export default function ReadingPage() {
     questions, answers, score, expandedExplanation, isLoading,
     inputMode, fileName,
     setMode, setSearchQuery, setPassage, setQuestionCount,
-    setDifficulty, setSelectedTypes, setQuestions, setAnswers, setStep,
-    setIsPublished, setInputMode, setFileName, setExpandedExplanation,
+    setDifficulty, setStep, setInputMode, setExpandedExplanation,
     toggleType, handleAnswer, handleFileUpload, handleGenerate,
     handleSubmit, handleReset, handleTakePublished, handlePublish: storeHandlePublish
   } = useReadingStore();
@@ -173,13 +58,13 @@ export default function ReadingPage() {
         if (stored) {
           try {
             allQuizzes.push(...JSON.parse(stored));
-          } catch(e){}
+          } catch {}
         }
         const bookmarkedRaw = localStorage.getItem('english_app_bookmarks');
         if (bookmarkedRaw) {
           try {
             allQuizzes.push(...JSON.parse(bookmarkedRaw));
-          } catch(e){}
+          } catch {}
         }
         const targetQuiz = allQuizzes.find(q => q.id === takeId);
         if (targetQuiz) {
@@ -188,7 +73,7 @@ export default function ReadingPage() {
         }
       }
     }
-  }, [publishedQuizzes]);
+  }, [publishedQuizzes, handleTakePublished]);
 
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [pubTitle, setPubTitle] = useState('');

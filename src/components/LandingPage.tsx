@@ -2,12 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   Search, Headphones, BookOpen, Star, ArrowRight,
-  Zap, Users, FileText, ChevronDown, CheckCircle,
-  HelpCircle, Sparkles, MessageSquare, Award, Clock
+  Zap, ChevronDown, CheckCircle,
+  HelpCircle, Sparkles, MessageSquare, Clock
 } from 'lucide-react';
 import AuthModal from './AuthModal';
 import { useQuizStore } from '@/store/useQuizStore';
-import { QuizItem } from '@/types';
 import { defaultQuizzes } from '@/lib/mock/data';
 import { useAuthStore } from '@/store/useAuthStore';
 import Link from 'next/link';

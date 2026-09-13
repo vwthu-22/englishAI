@@ -2,7 +2,8 @@
 // Swap the mock implementations below with real fetch/axios calls when BE ready.
 
 import type { QuizItem } from '@/types';
-import type { PublishedQuiz, CompletedTest } from '@/store/useQuizStore';
+import type { PublishedQuiz } from '@/store/useQuizStore';
+import type { CompletedTest } from '@/types';
 import { defaultQuizzes } from '@/lib/mock/data';
 
 export const quizService = {
@@ -46,7 +47,7 @@ export const quizService = {
    * Save a completed test to history.
    * TODO: replace with POST /api/quizzes/history
    */
-  saveHistory: async (test: CompletedTest): Promise<void> => {
+  saveHistory: async (_test: CompletedTest): Promise<void> => {
     // no-op in mock — handled by store directly
   },
 

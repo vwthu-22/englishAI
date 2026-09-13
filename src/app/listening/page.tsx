@@ -1,23 +1,16 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Video, Settings, CheckCircle, XCircle, Download,
-  ChevronDown, ChevronRight, Lightbulb, RefreshCw, AlertCircle,
-  Headphones, Sparkles, Plus, Globe, ArrowRight,
-  Search, Share2, Users, BookOpen, Star, Clock, Bookmark,
+  Music, Settings, CheckCircle, XCircle, Download,
+  ChevronDown, ChevronRight, Lightbulb, RefreshCw,
+  Headphones, Sparkles, ArrowRight, Upload, Link2 as LinkIcon,
+  Search, Share2, Bookmark, BookOpen, Users, Star, Clock,
   ListOrdered, FileText, CheckSquare, Link2, Edit3
 } from 'lucide-react';
-import { Question } from '@/types';
-import { PublishedQuiz, useListeningStore } from '@/store/useAppStore';
+import { useListeningStore } from '@/store/useListeningStore';
 import { useBookmarkStore } from '@/store/useBookmarkStore';
 import { useQuizStore } from '@/store/useQuizStore';
-
-type Step = 'input' | 'configure' | 'practice' | 'results';
-
-const extractVideoId = (url: string) => {
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
-  return match ? match[1] : null;
-};
+import SuggestedExercises from '@/components/SuggestedExercises';
 
 const DIFFICULTY_LEVELS = ['A2', 'B1', 'B2', 'C1', 'Easy', 'Medium', 'Hard'];
 const QUESTION_TYPES = [
@@ -28,117 +21,11 @@ const QUESTION_TYPES = [
   { id: 'short-answer', label: 'Short Answer', Icon: Edit3 },
 ];
 
-// ── Suggested Exercises Component ──────────────────────────────────────────
-function SuggestedExercises({ currentType }: { currentType: 'listening' | 'reading' }) {
-  const [communityQuizzes, setCommunityQuizzes] = React.useState<any[]>([]);
-
-  React.useEffect(() => {
-    const listening = JSON.parse(localStorage.getItem('published_listening_quizzes') || '[]');
-    const reading = JSON.parse(localStorage.getItem('published_reading_quizzes') || '[]');
-    const all = [
-      ...listening.map((q: any) => ({ ...q, moduleType: 'listening' })),
-      ...reading.map((q: any) => ({ ...q, moduleType: 'reading' })),
-    ].sort(() => Math.random() - 0.5).slice(0, 4);
-    setCommunityQuizzes(all);
-  }, []);
-
-  const suggestions = [
-    { title: 'TED Talk: Future of AI', difficulty: 'B2', type: 'listening', qs: 10, tag: 'Listening' },
-    { title: 'IELTS Reading: Climate', difficulty: 'C1', type: 'reading', qs: 15, tag: 'Reading' },
-    { title: 'BBC News Comprehension', difficulty: 'B1', type: 'listening', qs: 8, tag: 'Listening' },
-    { title: 'Academic Vocabulary Boost', difficulty: 'B2', type: 'reading', qs: 12, tag: 'Reading' },
-  ];
-
-  return (
-    <div style={{ marginTop: '32px', borderTop: '1px solid #f1f3f6', paddingTop: '32px' }}>
-      {/* Try Next */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Try Next</h3>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>AI-curated exercises based on your level</p>
-          </div>
-        </div>
-        <div className="suggested-exercises-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
-          {suggestions.map((s, i) => (
-            <a key={i} href={s.type === 'listening' ? '/listening' : '/reading'} style={{ textDecoration: 'none' }}>
-              <div className="card p-4 group" style={{ cursor: 'pointer', transition: 'all 0.2s' }}>
-                <div style={{
-                  width: '38px', height: '38px', borderRadius: '10px', marginBottom: '10px',
-                  background: s.type === 'listening' ? 'rgba(108,99,255,0.1)' : 'rgba(16,185,129,0.1)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
-                  {s.type === 'listening'
-                    ? <Headphones size={17} color="#a78bfa" />
-                    : <BookOpen size={17} color="#34d399" />}
-                </div>
-                <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px', lineHeight: 1.3 }}>{s.title}</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                  <span style={{
-                    fontSize: '10px', fontWeight: 600, padding: '2px 7px', borderRadius: '20px',
-                    background: s.type === 'listening' ? 'rgba(108,99,255,0.08)' : 'rgba(16,185,129,0.08)',
-                    color: s.type === 'listening' ? '#a78bfa' : '#34d399',
-                    border: `1px solid ${s.type === 'listening' ? 'rgba(108,99,255,0.2)' : 'rgba(16,185,129,0.2)'}`
-                  }}>{s.difficulty}</span>
-                  <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{s.qs} Qs</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, color: s.type === 'listening' ? '#a78bfa' : '#34d399' }}>
-                  Start <ArrowRight size={11} />
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {/* Community Exercises */}
-      {communityQuizzes.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>From the Community</h3>
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Exercises shared by other learners</p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--text-muted)' }}>
-              <Users size={12} /> Community picks
-            </div>
-          </div>
-          <div className="suggested-exercises-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
-            {communityQuizzes.map((quiz, i) => {
-              const isL = quiz.moduleType === 'listening';
-              return (
-                <a key={i} href={isL ? '/listening' : '/reading'} style={{ textDecoration: 'none' }}>
-                  <div className="card p-4 group" style={{ cursor: 'pointer', transition: 'all 0.2s' }}>
-                    <div style={{
-                      width: '38px', height: '38px', borderRadius: '10px', marginBottom: '10px',
-                      background: isL ? 'rgba(108,99,255,0.1)' : 'rgba(16,185,129,0.1)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}>
-                      {isL ? <Headphones size={17} color="#a78bfa" /> : <BookOpen size={17} color="#34d399" />}
-                    </div>
-                    <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{quiz.title}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                      <span style={{
-                        fontSize: '10px', fontWeight: 600, padding: '2px 7px', borderRadius: '20px',
-                        background: isL ? 'rgba(108,99,255,0.08)' : 'rgba(16,185,129,0.08)',
-                        color: isL ? '#a78bfa' : '#34d399',
-                        border: `1px solid ${isL ? 'rgba(108,99,255,0.2)' : 'rgba(16,185,129,0.2)'}`
-                      }}>{quiz.difficulty}</span>
-                      {quiz.questionCount && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{quiz.questionCount} Qs</span>}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, color: isL ? '#a78bfa' : '#34d399' }}>
-                      Start quiz <ArrowRight size={11} />
-                    </div>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+const SAMPLE_AUDIOS = [
+  { title: 'IELTS Listening Practice Test 1', duration: '30 mins', difficulty: 'B2', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+  { title: 'BBC 6 Minute English – AI & Jobs', duration: '6 mins', difficulty: 'B1', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
+  { title: 'TED Talk Audio: Power of Introverts', duration: '12 mins', difficulty: 'C1', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
+];
 
 export default function ListeningPage() {
   const { toggleBookmark, isBookmarked } = useBookmarkStore();
@@ -147,14 +34,17 @@ export default function ListeningPage() {
 
   const {
     mode, searchQuery, isPublished, isPublishing, step,
-    youtubeUrl, videoId, questionCount, difficulty, selectedTypes,
-    questions, answers, showResults, score, expandedExplanation, isLoading,
-    setMode, setSearchQuery, setYoutubeUrl, setVideoId, setQuestionCount,
-    setDifficulty, setSelectedTypes, setQuestions, setAnswers, setStep,
-    setIsPublished, setExpandedExplanation, toggleType, handleAnswer,
-    handleUrlSubmit, handleGenerate, handleSubmit, handleReset,
+    audioUrl, youtubeId, inputMode, fileName, questionCount, difficulty, selectedTypes,
+    questions, answers, score, expandedExplanation, isLoading,
+    setMode, setSearchQuery, setAudioUrl, setInputMode, setFileName,
+    setQuestionCount, setDifficulty,
+    setStep, setExpandedExplanation,
+    toggleType, handleAnswer, handleFileUpload, handleAudioSubmit,
+    handleGenerate, handleSubmit, handleReset,
     handleTakePublished, handlePublish: storeHandlePublish
   } = useListeningStore();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -163,17 +53,9 @@ export default function ListeningPage() {
       if (takeId) {
         const allQuizzes = [...publishedQuizzes];
         const stored = localStorage.getItem('published_listening_quizzes');
-        if (stored) {
-          try {
-            allQuizzes.push(...JSON.parse(stored));
-          } catch(e){}
-        }
+        if (stored) { try { allQuizzes.push(...JSON.parse(stored)); } catch {} }
         const bookmarkedRaw = localStorage.getItem('english_app_bookmarks');
-        if (bookmarkedRaw) {
-          try {
-            allQuizzes.push(...JSON.parse(bookmarkedRaw));
-          } catch(e){}
-        }
+        if (bookmarkedRaw) { try { allQuizzes.push(...JSON.parse(bookmarkedRaw)); } catch {} }
         const targetQuiz = allQuizzes.find(q => q.id === takeId);
         if (targetQuiz) {
           handleTakePublished(targetQuiz);
@@ -181,7 +63,7 @@ export default function ListeningPage() {
         }
       }
     }
-  }, [publishedQuizzes]);
+  }, [publishedQuizzes, handleTakePublished]);
 
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [pubTitle, setPubTitle] = useState('');
@@ -240,7 +122,6 @@ export default function ListeningPage() {
       {/* ── Search Panel ── */}
       {step === 'input' && mode === 'search' && (
         <div className="w-full max-w-4xl mx-auto animate-fade-in-up">
-          {/* Search box */}
           <div className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-5 py-4 shadow-[0_4px_20px_rgba(0,0,0,0.02)] mb-8">
             <Search size={18} className="text-gray-400 shrink-0" />
             <input
@@ -255,7 +136,6 @@ export default function ListeningPage() {
             )}
           </div>
 
-          {/* Results */}
           {filteredQuizzes.length === 0 ? (
             <div className="text-center py-20">
               <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-4 border border-gray-100">
@@ -270,7 +150,7 @@ export default function ListeningPage() {
                 <div key={quiz.id} className="card p-5 hover:-translate-y-1 transition-all duration-300 border border-gray-100/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] rounded-2xl bg-white">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center shrink-0 border border-violet-100">
-                      <Video size={20} className="text-violet-500" />
+                      <Music size={20} className="text-violet-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-bold text-sm mb-1 truncate text-gray-800">{quiz.title}</h4>
@@ -294,7 +174,7 @@ export default function ListeningPage() {
                               questionCount: quiz.questionCount,
                               author: quiz.author,
                               publishedAt: quiz.publishedAt,
-                              videoId: quiz.videoId,
+                              audioUrl: quiz.audioUrl,
                               questions: quiz.questions
                             })}
                             className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
@@ -302,7 +182,6 @@ export default function ListeningPage() {
                                 ? 'bg-violet-50 text-violet-600 border-violet-200'
                                 : 'bg-transparent text-gray-400 border-gray-200 hover:text-gray-600 hover:bg-gray-50'
                             }`}
-                            title={isBookmarked(quiz.id) ? 'Saved' : 'Save for later'}
                           >
                             <Bookmark size={14} fill={isBookmarked(quiz.id) ? 'currentColor' : 'none'} />
                           </button>
@@ -323,104 +202,119 @@ export default function ListeningPage() {
         </div>
       )}
 
-      {/* Step 1: Input (AI mode only) */}
+      {/* ── Step 1: Input (AI mode) ── */}
       {step === 'input' && mode === 'ai' && (
         <div className="w-full max-w-4xl mx-auto flex flex-col items-center py-2 animate-fade-in-up">
-          {/* Tagline Header */}
-          <div className="text-center mb-6">
-            <h1 className="sg text-xl md:text-2xl font-bold tracking-tight mb-1 text-gray-800 flex items-center justify-center gap-2">
-              <span>Other AI tools guess.</span>
-              <span className="hero-gradient-text !from-violet-600 !to-indigo-500" style={{ WebkitTextFillColor: 'unset', background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>EnglishAI knows.</span>
-            </h1>
-            <p className="text-xs max-w-md mx-auto text-gray-400 leading-relaxed">
-              Enter a YouTube URL to automatically extract transcripts, generate questions, and practice listening.
+
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 rounded-2xl bg-violet-50 border border-violet-100 flex items-center justify-center mx-auto mb-4 shadow-[0_4px_16px_rgba(108,99,255,0.15)]">
+              <Headphones size={30} className="text-violet-500" />
+            </div>
+            <h1 className="text-xl font-bold text-gray-800 mb-1">Upload or link your audio</h1>
+            <p className="text-sm text-gray-400 max-w-sm">
+              EnglishAI will generate comprehension questions from your audio file.
             </p>
           </div>
 
-          {/* Glowing Studocu-style Input Container */}
-          <div className="w-full max-w-xl bg-white border border-gray-100 rounded-2xl p-4 shadow-[0_8px_24px_rgba(0,0,0,0.02)] hover:border-violet-200 hover:shadow-[0_10px_30px_rgba(108,99,255,0.06)] transition-all duration-300 mb-8">
-            {/* Top row: Badge */}
-            <div className="flex items-center gap-2 mb-2.5">
-              <span className="flex items-center gap-1 text-[10px] font-bold text-violet-600 bg-violet-50/50 px-2 py-0.5 rounded border border-violet-100/60">
-                <Plus size={10} /> Add YouTube Link
-              </span>
+          {/* Input Mode Tabs */}
+          <div className="w-full max-w-xl mb-4">
+            <div className="inline-flex bg-gray-100 rounded-xl p-1 mb-5">
+              <button
+                onClick={() => setInputMode('upload')}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  inputMode === 'upload' ? 'bg-white text-violet-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Upload size={12} /> Upload File
+              </button>
+              <button
+                onClick={() => setInputMode('url')}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  inputMode === 'url' ? 'bg-white text-violet-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <LinkIcon size={12} /> Audio URL
+              </button>
             </div>
 
-            {/* Input field */}
-            <div className="relative flex items-center mb-3 bg-gray-50/40 border border-gray-100 rounded-xl px-3 py-0.5">
-              <input
-                className="w-full bg-transparent border-none outline-none text-xs py-1.5" style={{ color: 'var(--text-primary)' }}
-                placeholder="Paste a YouTube link here (e.g., https://youtube.com/watch?v=...)"
-                value={youtubeUrl}
-                onChange={e => setYoutubeUrl(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleUrlSubmit()}
-              />
-            </div>
-
-            {/* Error Message */}
-            {youtubeUrl && !extractVideoId(youtubeUrl) && (
-              <div className="flex items-center gap-2 text-xs text-red-500 bg-red-50 border border-red-100 px-3 py-1.5 rounded-lg mb-3">
-                <AlertCircle size={13} />
-                <span>Invalid YouTube link. Please paste a valid watch or embed URL.</span>
+            {/* Upload tab */}
+            {inputMode === 'upload' && (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full border-2 border-dashed border-violet-200 hover:border-violet-400 bg-violet-50/40 hover:bg-violet-50/70 rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group"
+              >
+                <div className="w-14 h-14 rounded-xl bg-white border border-violet-100 shadow-sm flex items-center justify-center mb-4 group-hover:shadow-md transition-all">
+                  <Upload size={24} className="text-violet-400 group-hover:text-violet-600" />
+                </div>
+                <p className="text-sm font-semibold text-gray-700 mb-1">Click to upload audio</p>
+                <p className="text-xs text-gray-400">MP3, WAV, M4A, OGG — up to 100MB</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="audio/*"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
               </div>
             )}
 
-            {/* Bottom Row: Tags + Submit button */}
-            <div className="flex items-center justify-between border-t border-gray-50 pt-3">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2 py-0.5 rounded">
-                  Diff: {difficulty}
-                </span>
-                <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2 py-0.5 rounded">
-                  {questionCount} Questions
-                </span>
-                <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2 py-0.5 rounded">
-                  Practice Mode
-                </span>
+            {/* URL tab */}
+            {inputMode === 'url' && (
+              <div className="w-full bg-white border border-gray-100 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+                <label className="block text-xs font-semibold text-gray-500 mb-2">Audio URL or YouTube link</label>
+                <div className="relative flex items-center gap-2">
+                  <div className="flex-1 flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
+                    <Music size={14} className="text-gray-400 shrink-0" />
+                    <input
+                      className="flex-1 bg-transparent border-none outline-none text-xs"
+                      style={{ color: 'var(--text-primary)' }}
+                      placeholder="Paste YouTube link or audio URL (.mp3, .wav...)" 
+                      value={audioUrl}
+                      onChange={e => setAudioUrl(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleAudioSubmit()}
+                    />
+                  </div>
+                  <button
+                    onClick={handleAudioSubmit}
+                    disabled={!audioUrl.trim()}
+                    className="w-9 h-9 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white flex items-center justify-center transition-all shadow-sm"
+                  >
+                    <ArrowRight size={15} />
+                  </button>
+                </div>
+                {/* Hint badges */}
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-[10px] font-medium text-gray-400 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full">youtube.com/watch?v=...</span>
+                  <span className="text-[10px] text-gray-300">or</span>
+                  <span className="text-[10px] font-medium text-gray-400 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full">https://....mp3</span>
+                </div>
               </div>
-
-              <button
-                onClick={handleUrlSubmit}
-                disabled={!youtubeUrl || !extractVideoId(youtubeUrl)}
-                className="w-8 h-8 rounded-full bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:hover:bg-violet-600 text-white flex items-center justify-center transition-all duration-200 shadow-sm shadow-violet-100"
-              >
-                <ArrowRight size={14} />
-              </button>
-            </div>
+            )}
           </div>
 
-          {/* Sample Videos Grid */}
-          <div className="w-full">
+          {/* Sample Audios */}
+          <div className="w-full max-w-xl">
             <h3 className="text-[11px] font-bold uppercase tracking-wider mb-3 flex items-center gap-2 text-gray-400">
-              <span>Try a sample video</span>
+              <span>Try a sample audio</span>
               <div className="flex-1 h-px bg-gray-100" />
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {[
-                { title: 'TED Talk: The Power of Introverts', url: 'https://youtube.com/watch?v=c0KYU2j0TM4', duration: '12 mins', difficulty: 'B2' },
-                { title: 'BBC News: AI in Education', url: 'https://youtube.com/watch?v=dQw4w9WgXcQ', duration: '8 mins', difficulty: 'B1' },
-                { title: 'IELTS Listening Practice Test', url: 'https://youtube.com/watch?v=jNQXAC9IVRw', duration: '30 mins', difficulty: 'C1' },
-              ].map(ex => (
+              {SAMPLE_AUDIOS.map(ex => (
                 <div
                   key={ex.title}
-                  onClick={() => setYoutubeUrl(ex.url)}
+                  onClick={() => { setAudioUrl(ex.url); setFileName(ex.title); setInputMode('url'); }}
                   className="card flex items-start gap-3 p-3.5 cursor-pointer hover:border-violet-200 hover:-translate-y-0.5 transition-all duration-300 bg-white border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.01)] rounded-2xl"
                 >
-                  {/* Icon Left */}
-                  <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0 border border-red-100/50 shadow-[0_2px_8px_rgba(239,68,68,0.1)]">
-                    <Video size={18} className="text-red-500" />
+                  <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center shrink-0 border border-violet-100/50">
+                    <Music size={18} className="text-violet-500" />
                   </div>
-                  {/* Right Content */}
-                  <div className="flex-1 min-w-0 flex flex-col justify-between h-full">
-                    <div>
-                      <h4 className="text-[11px] font-bold truncate mb-0.5 text-gray-700">{ex.title}</h4>
-                      <span className="text-[10px] font-semibold text-violet-600 hover:underline">
-                        + Load sample
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-[9px] mt-2 pt-1.5 border-t border-gray-50 text-gray-400" style={{ color: 'var(--text-muted)' }}>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-[11px] font-bold truncate mb-0.5 text-gray-700">{ex.title}</h4>
+                    <span className="text-[10px] font-semibold text-violet-600">+ Load sample</span>
+                    <div className="flex items-center justify-between text-[9px] mt-2 pt-1.5 border-t border-gray-50 text-gray-400">
                       <span>{ex.duration} • {ex.difficulty}</span>
-                      <Globe size={10} />
+                      <Headphones size={10} />
                     </div>
                   </div>
                 </div>
@@ -430,7 +324,7 @@ export default function ListeningPage() {
         </div>
       )}
 
-      {/* Step 2: Configure */}
+      {/* ── Step 2: Configure ── */}
       {step === 'configure' && (
         <div className="mx-auto w-full" style={{ maxWidth: '680px' }}>
           <div className="card" style={{ padding: '32px' }}>
@@ -440,7 +334,9 @@ export default function ListeningPage() {
               </div>
               <div>
                 <h2 style={{ fontSize: '18px', fontWeight: 700 }}>Customize Exercise</h2>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Video: {videoId}</p>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                  🎵 {fileName || (audioUrl ? audioUrl.split('/').pop() : 'Audio file')}
+                </p>
               </div>
             </div>
 
@@ -460,9 +356,7 @@ export default function ListeningPage() {
                       color: questionCount === n ? '#a78bfa' : 'var(--text-secondary)',
                       cursor: 'pointer', fontWeight: 600, fontSize: '14px', transition: 'all 0.2s'
                     }}
-                  >
-                    {n}
-                  </button>
+                  >{n}</button>
                 ))}
               </div>
             </div>
@@ -483,9 +377,7 @@ export default function ListeningPage() {
                       color: difficulty === d ? '#a78bfa' : 'var(--text-secondary)',
                       cursor: 'pointer', fontWeight: 500, fontSize: '13px', transition: 'all 0.2s'
                     }}
-                  >
-                    {d}
-                  </button>
+                  >{d}</button>
                 ))}
               </div>
             </div>
@@ -534,19 +426,87 @@ export default function ListeningPage() {
         </div>
       )}
 
-      {/* Step 3: Practice */}
+      {/* ── Step 3: Practice ── */}
       {step === 'practice' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:h-[calc(100vh-160px)] h-auto">
-          {/* Left: Video */}
-          <div className="flex flex-col gap-4 lg:h-full h-auto">
-            <div className="card" style={{ overflow: 'hidden', aspectRatio: '16/9', position: 'relative' }}>
-              <iframe
-                src={`https://www.youtube.com/embed/${videoId}?rel=0`}
-                style={{ width: '100%', height: '100%', border: 'none' }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+          {/* Left: Audio Player */}
+          <div className="flex flex-col gap-4">
+            {/* Player card */}
+            <div className="card" style={{ padding: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+              {/* Visual */}
+              <div style={{
+                width: '80px', height: '80px', borderRadius: '20px',
+                background: 'linear-gradient(135deg, rgba(108,99,255,0.2), rgba(139,92,246,0.15))',
+                border: '1px solid rgba(108,99,255,0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 8px 24px rgba(108,99,255,0.15)'
+              }}>
+                <Headphones size={36} color="#a78bfa" />
+              </div>
+
+              {/* Title */}
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                  {fileName || 'Audio Exercise'}
+                </p>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Listen carefully and answer the questions</p>
+              </div>
+
+              {/* Audio / YouTube Player */}
+              {youtubeId ? (
+                // YouTube: embed compact with only controls visible
+                <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px', background: '#000' }}>
+                  <iframe
+                    src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&controls=1`}
+                    style={{ width: '100%', height: '68px', border: 'none', display: 'block' }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0,
+                    height: 'calc(100% - 40px)', // cover video, expose controls bar
+                    background: 'linear-gradient(135deg, rgba(108,99,255,0.85), rgba(139,92,246,0.85))',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none'
+                  }}>
+                    <Headphones size={28} color="rgba(255,255,255,0.9)" />
+                  </div>
+                </div>
+              ) : audioUrl ? (
+                <audio
+                  controls
+                  src={audioUrl}
+                  style={{ width: '100%', borderRadius: '12px', outline: 'none' }}
+                >
+                  Your browser does not support the audio element.
+                </audio>
+              ) : (
+                <div style={{
+                  width: '100%', padding: '16px', background: 'rgba(108,99,255,0.05)',
+                  border: '1px dashed rgba(108,99,255,0.3)', borderRadius: '12px',
+                  textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)'
+                }}>
+                  No audio source — questions are still available below
+                </div>
+              )}
+
+              {/* Tips */}
+              <div style={{
+                width: '100%', padding: '12px 16px', background: 'rgba(245,158,11,0.08)',
+                border: '1px solid rgba(245,158,11,0.2)', borderRadius: '12px',
+                display: 'flex', alignItems: 'flex-start', gap: '10px'
+              }}>
+                <Lightbulb size={15} color="#f59e0b" style={{ marginTop: '2px', flexShrink: 0 }} />
+                <div>
+                  <p style={{ fontSize: '12px', fontWeight: 600, color: '#d97706', marginBottom: '2px' }}>Tip</p>
+                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                    Listen to the audio first, then answer the questions. You can pause and replay as needed.
+                  </p>
+                </div>
+              </div>
             </div>
+
+            {/* Stats card */}
             <div className="card" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <span className="badge badge-purple"><Headphones size={12} /> Listening</span>
@@ -559,7 +519,7 @@ export default function ListeningPage() {
           </div>
 
           {/* Right: Questions */}
-          <div className="flex flex-col gap-3 overflow-y-auto lg:h-full h-auto pr-1">
+          <div className="flex flex-col gap-3 overflow-y-auto lg:max-h-[calc(100vh-160px)] pr-1">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: 'var(--bg-primary)', paddingBottom: '12px', zIndex: 5 }}>
               <h3 style={{ fontSize: '16px', fontWeight: 700 }}>Questions ({questions.length})</h3>
               <button className="btn-primary" onClick={handleSubmit} style={{ padding: '8px 18px', fontSize: '13px' }}>Submit</button>
@@ -602,7 +562,7 @@ export default function ListeningPage() {
                   </div>
                 ) : (
                   <div style={{ paddingLeft: '38px' }}>
-                  <input className="input-field" placeholder="Type your answer..." value={answers[q.id] || ''} onChange={e => handleAnswer(q.id, e.target.value)} />
+                    <input className="input-field" placeholder="Type your answer..." value={answers[q.id] || ''} onChange={e => handleAnswer(q.id, e.target.value)} />
                   </div>
                 )}
               </div>
@@ -611,7 +571,7 @@ export default function ListeningPage() {
         </div>
       )}
 
-      {/* Step 4: Results */}
+      {/* ── Step 4: Results ── */}
       {step === 'results' && (
         <div className="mx-auto w-full" style={{ maxWidth: '800px' }}>
           {/* Score Card */}
@@ -660,7 +620,7 @@ export default function ListeningPage() {
             </div>
           </div>
 
-          {/* Action buttons */}
+          {/* Actions */}
           <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
             <button className="btn-primary" onClick={handleReset} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><RefreshCw size={15} /> New Exercise</button>
             <button className="btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><Download size={15} /> Download Worksheet</button>
@@ -722,15 +682,10 @@ export default function ListeningPage() {
               <div key={q.id} className="question-card" style={{ borderColor: isCorrect ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                   <div style={{ marginTop: '2px', flexShrink: 0 }}>
-                    {isCorrect
-                      ? <CheckCircle size={20} color="#34d399" />
-                      : <XCircle size={20} color="#f87171" />
-                    }
+                    {isCorrect ? <CheckCircle size={20} color="#34d399" /> : <XCircle size={20} color="#f87171" />}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>
-                      Q{idx + 1}: {q.question}
-                    </p>
+                    <p style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Q{idx + 1}: {q.question}</p>
                     {!isCorrect && (
                       <div style={{ fontSize: '13px', marginBottom: '8px' }}>
                         <span style={{ color: '#f87171' }}>Your answer: {userAnswer || '(no answer)'}</span>
@@ -766,42 +721,26 @@ export default function ListeningPage() {
         </div>
       )}
 
-      {/* ── More Community Exercises ── */}
-      {step === 'results' && (
-        <SuggestedExercises currentType="listening" />
-      )}
+      {/* ── Suggested Exercises after results ── */}
+      {step === 'results' && <SuggestedExercises />}
 
-      {/* ── Publish Modal Popup ── */}
+      {/* ── Publish Modal ── */}
       {showPublishModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl animate-fade-in-up">
-            <h3 className="text-base font-bold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
-              Publish Test to Community
-            </h3>
-
+            <h3 className="text-base font-bold mb-4 text-gray-900 dark:text-white">Publish Test to Community</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
-                  Test Title
-                </label>
-                <input
-                  type="text"
-                  value={pubTitle}
-                  onChange={e => setPubTitle(e.target.value)}
-                  placeholder="e.g. TED Talk: The Future of AI"
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Test Title</label>
+                <input type="text" value={pubTitle} onChange={e => setPubTitle(e.target.value)}
+                  placeholder="e.g. BBC Listening – Environment"
                   className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-violet-500"
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
-                  Topic / Category
-                </label>
-                <select
-                  value={pubTopic}
-                  onChange={e => setPubTopic(e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-violet-500"
-                >
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Topic / Category</label>
+                <select value={pubTopic} onChange={e => setPubTopic(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-violet-500">
                   <option value="General">General</option>
                   <option value="Technology">Technology</option>
                   <option value="Psychology">Psychology</option>
@@ -812,34 +751,21 @@ export default function ListeningPage() {
                   <option value="Culture">Culture</option>
                 </select>
               </div>
-
               <div>
-                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
-                  Difficulty Level
-                </label>
-                <select
-                  value={pubDifficulty}
-                  onChange={e => setPubDifficulty(e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-violet-500"
-                >
-                  {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map(lvl => (
-                    <option key={lvl} value={lvl}>{lvl}</option>
-                  ))}
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Difficulty Level</label>
+                <select value={pubDifficulty} onChange={e => setPubDifficulty(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-violet-500">
+                  {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
                 </select>
               </div>
             </div>
-
             <div className="flex gap-2.5 justify-end mt-6">
-              <button
-                onClick={() => setShowPublishModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200"
-              >
+              <button onClick={() => setShowPublishModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200">
                 Cancel
               </button>
-              <button
-                onClick={handleConfirmPublish}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 shadow-md"
-              >
+              <button onClick={handleConfirmPublish}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 shadow-md">
                 Confirm & Publish
               </button>
             </div>
@@ -847,9 +773,7 @@ export default function ListeningPage() {
         </div>
       )}
 
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

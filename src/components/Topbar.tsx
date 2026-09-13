@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Bell, Search, Menu, ChevronDown, LogOut, Settings, User as UserIcon } from 'lucide-react';
+import { Bell, Menu, ChevronDown, LogOut, Settings, User as UserIcon } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useUiStore } from '@/store/useUiStore';
 

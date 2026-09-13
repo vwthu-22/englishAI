@@ -2,12 +2,11 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import {
-  Headphones, BookOpen, Heart, Users, Search, SlidersHorizontal,
-  ChevronRight, Star, X, Bookmark, Play, ArrowLeft, Zap, Trophy,
-  Clock, Globe, Filter
+  Headphones, BookOpen, Heart, Search,
+  X, Bookmark, Play, ArrowLeft, Zap, Trophy,
+  Globe
 } from 'lucide-react';
 import { useQuizStore, PublishedQuiz } from '@/store/useQuizStore';
-import { QuizItem } from '@/types';
 import { defaultQuizzes } from '@/lib/mock/data';
 
 /* ─── Mock community quizzes seeded from defaultQuizzes ─── */
@@ -62,7 +61,11 @@ export default function CommunityPage() {
   const handleToggleSave = (id: string) => {
     setSaved(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };

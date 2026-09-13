@@ -1,12 +1,13 @@
 'use client';
 import { create } from 'zustand';
+import { WeeklyData, MonthlyProgress } from '@/types';
 import { mockWeeklyData, mockMonthlyProgress } from '@/lib/mock/data';
 
 interface StatsState {
-  weeklyData: typeof mockWeeklyData;
-  monthlyProgress: typeof mockMonthlyProgress;
-  setWeeklyData: (data: typeof mockWeeklyData) => void;
-  setMonthlyProgress: (progress: typeof mockMonthlyProgress) => void;
+  weeklyData: WeeklyData[];
+  monthlyProgress: MonthlyProgress[];
+  setWeeklyData: (data: WeeklyData[]) => void;
+  setMonthlyProgress: (progress: MonthlyProgress[]) => void;
 }
 
 export const useStatsStore = create<StatsState>((set) => ({

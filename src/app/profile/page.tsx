@@ -1,8 +1,8 @@
 'use client';
 import React, { useState } from 'react';
 import {
-  User, Mail, Calendar, Trophy, Flame, BookOpen, Headphones,
-  Target, Edit3, Save, X, Camera, TrendingUp, Star, Award,
+  Mail, Calendar, Trophy, Flame, BookOpen, Headphones,
+  Target, Edit3, Save, X, Camera, TrendingUp, Award,
   Clock, Zap
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -15,12 +15,18 @@ import {
 
 const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{ name: string; value: number | string; color: string }>;
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: '10px', padding: '10px 14px', fontSize: '13px' }}>
         <p style={{ color: 'var(--text-muted)', marginBottom: '4px' }}>{label}</p>
-        {payload.map((entry: any, i: number) => (
+        {payload.map((entry, i: number) => (
           <p key={i} style={{ color: entry.color, fontWeight: 600 }}>{entry.name}: {entry.value}</p>
         ))}
       </div>
@@ -48,9 +54,7 @@ export default function ProfilePage() {
   const listeningCount = exercises.filter(e => e.type === 'listening').length;
   const readingCount = exercises.filter(e => e.type === 'reading').length;
   const bestScore = completed.length > 0 ? Math.max(...completed.map(e => e.score || 0)) : 0;
-
   const currentLevelIdx = CEFR_LEVELS.indexOf(editLevel);
-  const levelProgress = ((currentLevelIdx + 1) / CEFR_LEVELS.length) * 100;
 
   const stats = [
     { label: 'Total Exercises', value: exercises.length, icon: BookOpen, color: 'purple', change: '+3 this week' },

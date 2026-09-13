@@ -2,7 +2,7 @@
 // Temporary placeholder data for development / demo purposes.
 // When connecting a real backend, delete this file and update the services.
 
-import type { User, Exercise, Question, QuizItem, WeeklyData, MonthlyProgress } from '@/types';
+import type { User, Exercise, Question, QuizItem, WeeklyData, MonthlyProgress, CompletedTest } from '@/types';
 
 export const mockUser: User = {
   id: '1',
@@ -260,5 +260,48 @@ export const mockQuestions: Question[] = [
     ],
     answer: 'Ambiversion - Balanced mix of both',
     explanation: 'Ambiversion refers to people who exhibit qualities of both introversion and extroversion.',
+  },
+];
+
+export const seedCompletedTests: CompletedTest[] = [
+  {
+    id: 'comp-1',
+    title: 'TED Talk: The Power of Introverts',
+    type: 'listening',
+    score: 90,
+    totalQuestions: 10,
+    correctAnswers: 9,
+    completedAt: '28/07/2026 14:30',
+    difficulty: 'B2',
+  },
+  {
+    id: 'comp-2',
+    title: 'IELTS Academic: Urban Development and Planning',
+    type: 'reading',
+    score: 85,
+    totalQuestions: 20,
+    correctAnswers: 17,
+    completedAt: '26/07/2026 09:15',
+    difficulty: 'C1',
+  },
+  {
+    id: 'comp-3',
+    title: 'BBC News: Technology and Society in 2025',
+    type: 'listening',
+    score: 75,
+    totalQuestions: 8,
+    correctAnswers: 6,
+    completedAt: '24/07/2026 16:45',
+    difficulty: 'B1',
+  },
+  {
+    id: 'comp-4',
+    title: 'Climate Change: Impact on Future Generations',
+    type: 'reading',
+    score: 80,
+    totalQuestions: 15,
+    correctAnswers: 12,
+    completedAt: '20/07/2026 11:20',
+    difficulty: 'C1',
   },
 ];

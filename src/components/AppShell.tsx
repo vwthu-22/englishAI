@@ -6,7 +6,6 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useUiStore } from '@/store/useUiStore';
 import { useBookmarkStore } from '@/store/useBookmarkStore';
 import { useQuizStore } from '@/store/useQuizStore';
-import AuthModal from './AuthModal';
 import LandingPage from './LandingPage';
 import Footer from './Footer';
 import { usePathname } from 'next/navigation';
@@ -30,7 +29,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     loadBookmarks();
     loadPublishedQuizzes();
-  }, []);
+  }, [loadBookmarks, loadPublishedQuizzes]);
 
   const pageInfo = pageTitles[pathname] || { title: 'EnglishAI', subtitle: '' };
 

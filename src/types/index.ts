@@ -60,3 +60,15 @@ export interface MonthlyProgress {
   score: number;
   exercises: number;
 }
+
+export interface CompletedTest {
+  id: string;
+  quizId?: string;
+  title: string;
+  type: 'listening' | 'reading';
+  score: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  completedAt: string;
+  difficulty: string;
+}

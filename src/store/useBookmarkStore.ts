@@ -1,5 +1,6 @@
 'use client';
 import { create } from 'zustand';
+import { Question } from '@/types';
 
 export interface Bookmark {
   id: string;
@@ -10,8 +11,9 @@ export interface Bookmark {
   author: string;
   publishedAt: string;
   videoId?: string;
+  audioUrl?: string;
   passage?: string;
-  questions: any[];
+  questions: Question[];
 }
 
 interface BookmarkState {

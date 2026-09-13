@@ -5,14 +5,12 @@ import { usePathname } from 'next/navigation';
 import { 
   Home, Headphones, BookOpen, FolderOpen, 
   User, Zap, Menu, Clock, ChevronDown, ChevronUp, FileText, Folder,
-  Sparkles, Globe
+  Sparkles
 } from 'lucide-react';
-import { useAuthStore } from '@/store/useAuthStore';
 import { useUiStore } from '@/store/useUiStore';
 import { useExerciseStore } from '@/store/useExerciseStore';
 
 export default function Sidebar() {
-  const user = useAuthStore((s) => s.user);
   const { sidebarOpen, setSidebarOpen } = useUiStore();
   const exercises = useExerciseStore((s) => s.exercises);
   const pathname = usePathname();

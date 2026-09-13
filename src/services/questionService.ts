@@ -15,7 +15,9 @@ export const questionService = {
     count: number;
     difficulty: string;
     types: string[];
-    /** For listening: YouTube video ID */
+    /** For listening: audio file URL or blob URL */
+    audioUrl?: string;
+    /** For listening (legacy): YouTube video ID */
     videoId?: string;
     /** For reading: passage text */
     passage?: string;

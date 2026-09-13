@@ -12,8 +12,10 @@ interface ListeningState {
   isPublished: boolean;
   isPublishing: boolean;
   step: Step;
-  youtubeUrl: string;
-  videoId: string;
+  audioUrl: string;
+  youtubeId: string;   // populated when URL is a YouTube link
+  inputMode: 'url' | 'upload';
+  fileName: string;
   questionCount: number;
   difficulty: string;
   selectedTypes: string[];
@@ -26,8 +28,10 @@ interface ListeningState {
 
   setMode: (mode: 'ai' | 'search') => void;
   setSearchQuery: (query: string) => void;
-  setYoutubeUrl: (url: string) => void;
-  setVideoId: (id: string) => void;
+  setAudioUrl: (url: string) => void;
+  setYoutubeId: (id: string) => void;
+  setInputMode: (mode: 'url' | 'upload') => void;
+  setFileName: (name: string) => void;
   setQuestionCount: (count: number) => void;
   setDifficulty: (difficulty: string) => void;
   setSelectedTypes: (types: string[]) => void;
@@ -39,7 +43,8 @@ interface ListeningState {
 
   toggleType: (type: string) => void;
   handleAnswer: (questionId: string, answer: string) => void;
-  handleUrlSubmit: () => void;
+  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleAudioSubmit: () => void;
   handleGenerate: () => Promise<void>;
   handleSubmit: () => void;
   handleReset: () => void;
@@ -47,19 +52,16 @@ interface ListeningState {
   handlePublish: (addPublishedListeningQuiz: (quiz: PublishedQuiz) => void, meta?: { title?: string; topic?: string; difficulty?: string }) => Promise<void>;
 }
 
-const extractVideoId = (url: string) => {
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
-  return match ? match[1] : null;
-};
-
 export const useListeningStore = create<ListeningState>((set, get) => ({
   mode: 'ai',
   searchQuery: '',
   isPublished: false,
   isPublishing: false,
   step: 'input',
-  youtubeUrl: '',
-  videoId: '',
+  audioUrl: '',
+  youtubeId: '',
+  inputMode: 'url',
+  fileName: '',
   questionCount: 10,
   difficulty: 'B2',
   selectedTypes: ['multiple-choice', 'true-false'],
@@ -72,8 +74,10 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
 
   setMode: (mode) => set({ mode }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
-  setYoutubeUrl: (youtubeUrl) => set({ youtubeUrl }),
-  setVideoId: (videoId) => set({ videoId }),
+  setAudioUrl: (audioUrl) => set({ audioUrl }),
+  setYoutubeId: (youtubeId) => set({ youtubeId }),
+  setInputMode: (inputMode) => set({ inputMode }),
+  setFileName: (fileName) => set({ fileName }),
   setQuestionCount: (questionCount) => set({ questionCount }),
   setDifficulty: (difficulty) => set({ difficulty }),
   setSelectedTypes: (selectedTypes) => set({ selectedTypes }),
@@ -98,18 +102,30 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
     }));
   },
 
-  handleUrlSubmit: () => {
-    const { youtubeUrl } = get();
-    const id = extractVideoId(youtubeUrl);
-    if (id) {
-      set({ videoId: id, step: 'configure' });
+  handleFileUpload: (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      set({ audioUrl: url, fileName: file.name, step: 'configure' });
+    }
+  },
+
+  handleAudioSubmit: () => {
+    const { audioUrl } = get();
+    if (!audioUrl.trim()) return;
+    // Auto-detect YouTube URL and extract video ID
+    const ytMatch = audioUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+    if (ytMatch) {
+      set({ youtubeId: ytMatch[1], step: 'configure' });
+    } else {
+      set({ youtubeId: '', step: 'configure' });
     }
   },
 
   handleGenerate: async () => {
-    const { questionCount, selectedTypes, difficulty, videoId } = get();
+    const { questionCount, selectedTypes, difficulty, audioUrl } = get();
     set({ isLoading: true });
-    const generated = await questionService.generate({ count: questionCount, difficulty, types: selectedTypes, videoId });
+    const generated = await questionService.generate({ count: questionCount, difficulty, types: selectedTypes, audioUrl });
     set({ questions: generated, isLoading: false, step: 'practice' });
   },
 
@@ -127,11 +143,7 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
       }
     });
     const calculatedScore = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
-    set({
-      score: calculatedScore,
-      showResults: true,
-      step: 'results',
-    });
+    set({ score: calculatedScore, showResults: true, step: 'results' });
 
     const now = new Date();
     const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -150,8 +162,9 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
   handleReset: () => {
     set({
       step: 'input',
-      youtubeUrl: '',
-      videoId: '',
+      audioUrl: '',
+      youtubeId: '',
+      fileName: '',
       questions: [],
       answers: {},
       showResults: false,
@@ -161,9 +174,11 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
   },
 
   handleTakePublished: (quiz) => {
+    const storedYoutubeId = quiz.youtubeId || '';
     set({
-      youtubeUrl: quiz.youtubeUrl || '',
-      videoId: quiz.videoId || '',
+      audioUrl: quiz.audioUrl || '',
+      youtubeId: storedYoutubeId,
+      fileName: quiz.title || '',
       questions: quiz.questions,
       difficulty: quiz.difficulty,
       answers: {},
@@ -174,8 +189,8 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
     });
   },
 
-  handlePublish: async (addPublishedListeningQuiz, meta?: { title?: string; topic?: string; difficulty?: string }) => {
-    const { difficulty, videoId, youtubeUrl, questions } = get();
+  handlePublish: async (addPublishedListeningQuiz, meta) => {
+    const { difficulty, audioUrl, youtubeId, questions } = get();
     set({ isPublishing: true });
     await new Promise((r) => setTimeout(r, 1200));
     const quiz: PublishedQuiz = {
@@ -183,8 +198,8 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
       title: meta?.title || `Listening Quiz – ${meta?.difficulty || difficulty}`,
       type: 'listening',
       topic: meta?.topic || 'General',
-      videoId,
-      youtubeUrl,
+      audioUrl,
+      youtubeId,
       questions,
       difficulty: meta?.difficulty || difficulty,
       questionCount: questions.length,

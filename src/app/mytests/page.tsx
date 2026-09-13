@@ -1,15 +1,11 @@
 'use client';
 import React, { useState, useMemo } from 'react';
 import {
-  Search, Headphones, BookOpen, Heart, Play, Trash2, Zap,
-  X, ArrowLeft, Bookmark,
-  Clock,
-  RotateCcw,
-  CheckCircle
+  Search, Headphones, BookOpen, Heart, Play, Zap,
+  X, ArrowLeft, Clock, RotateCcw
 } from 'lucide-react';
-import { useAuthStore } from '@/store/useAuthStore';
-import { useQuizStore, PublishedQuiz, CompletedTest } from '@/store/useQuizStore';
-import { defaultQuizzes } from '@/lib/mock/data';
+import { useQuizStore, PublishedQuiz } from '@/store/useQuizStore';
+import { CompletedTest } from '@/types';
 import Link from 'next/link';
 
 /* Seed tests for "My Tests" if user hasn't published custom ones yet */
@@ -118,7 +114,6 @@ const SEED_COMPLETED_TESTS: CompletedTest[] = [
 type FilterType = 'all' | 'listening' | 'reading';
 
 export default function MyTestsPage() {
-  const user = useAuthStore((s) => s.user);
   const { publishedListeningQuizzes, publishedReadingQuizzes, completedTests, likedIds, toggleLike } = useQuizStore();
 
   const [mainTab, setMainTab] = useState<'posted' | 'history'>('posted');

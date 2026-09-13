@@ -1,16 +1,18 @@
 'use client';
 import { create } from 'zustand';
-import { QuizItem, Question } from '@/types';
-import { defaultQuizzes } from '@/lib/mock/data';
+import { QuizItem, Question, CompletedTest } from '@/types';
+import { defaultQuizzes, seedCompletedTests } from '@/lib/mock/data';
 
 export interface PublishedQuiz {
   id: string;
   title: string;
   type: 'listening' | 'reading';
   topic?: string;
-  videoId?: string;
-  youtubeUrl?: string;
-  passage?: string;
+  audioUrl?: string;   // listening: audio file URL
+  youtubeId?: string;  // listening: YouTube video ID (audio-only playback)
+  videoId?: string;    // legacy, keep for backward compat
+  youtubeUrl?: string; // legacy, keep for backward compat
+  passage?: string;    // reading: text passage
   questions: Question[];
   difficulty: string;
   questionCount: number;
@@ -21,17 +23,6 @@ export interface PublishedQuiz {
   rating: number;
 }
 
-export interface CompletedTest {
-  id: string;
-  quizId?: string;
-  title: string;
-  type: 'listening' | 'reading';
-  score: number; // percentage
-  totalQuestions: number;
-  correctAnswers: number;
-  completedAt: string;
-  difficulty: string;
-}
 
 interface QuizState {
   landingQuizzes: QuizItem[];
@@ -49,48 +40,6 @@ interface QuizState {
   toggleLike: (id: string, type: 'listening' | 'reading') => void;
 }
 
-export const SEED_COMPLETED_TESTS: CompletedTest[] = [
-  {
-    id: 'comp-1',
-    title: 'TED Talk: The Power of Introverts',
-    type: 'listening',
-    score: 90,
-    totalQuestions: 10,
-    correctAnswers: 9,
-    completedAt: '28/07/2026 14:30',
-    difficulty: 'B2',
-  },
-  {
-    id: 'comp-2',
-    title: 'IELTS Academic: Urban Development and Planning',
-    type: 'reading',
-    score: 85,
-    totalQuestions: 20,
-    correctAnswers: 17,
-    completedAt: '26/07/2026 09:15',
-    difficulty: 'C1',
-  },
-  {
-    id: 'comp-3',
-    title: 'BBC News: Technology and Society in 2025',
-    type: 'listening',
-    score: 75,
-    totalQuestions: 8,
-    correctAnswers: 6,
-    completedAt: '24/07/2026 16:45',
-    difficulty: 'B1',
-  },
-  {
-    id: 'comp-4',
-    title: 'Climate Change: Impact on Future Generations',
-    type: 'reading',
-    score: 80,
-    totalQuestions: 15,
-    correctAnswers: 12,
-    completedAt: '20/07/2026 11:20',
-    difficulty: 'C1',
-  },
-];
 
 export const useQuizStore = create<QuizState>((set) => ({
   landingQuizzes: defaultQuizzes,
@@ -140,21 +89,21 @@ export const useQuizStore = create<QuizState>((set) => ({
       if (listening) {
         try {
           set({ publishedListeningQuizzes: JSON.parse(listening) });
-        } catch (e) {}
+        } catch {}
       }
       const reading = localStorage.getItem('published_reading_quizzes');
       if (reading) {
         try {
           set({ publishedReadingQuizzes: JSON.parse(reading) });
-        } catch (e) {}
+        } catch {}
       }
       const history = localStorage.getItem('completed_tests_history');
       if (history) {
         try {
           set({ completedTests: JSON.parse(history) });
-        } catch (e) {}
+        } catch {}
       } else {
-        set({ completedTests: SEED_COMPLETED_TESTS });
+        set({ completedTests: seedCompletedTests });
       }
     }
   },

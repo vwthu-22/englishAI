@@ -14,7 +14,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: mockUser,
   isLoggedIn: true, // Mock default logged in state
 
-  login: (email, password) => {
+  login: (_email, _password) => {
     set({ isLoggedIn: true, user: mockUser });
   },
 
