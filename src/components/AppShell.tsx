@@ -21,17 +21,25 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const restoreSession = useAuthStore((s) => s.restoreSession);
   const sidebarOpen = useUiStore((s) => s.sidebarOpen);
   const loadBookmarks = useBookmarkStore((s) => s.loadBookmarks);
   const loadPublishedQuizzes = useQuizStore((s) => s.loadPublishedQuizzes);
   const pathname = usePathname();
 
   useEffect(() => {
+    restoreSession();
     loadBookmarks();
     loadPublishedQuizzes();
-  }, [loadBookmarks, loadPublishedQuizzes]);
+  }, [restoreSession, loadBookmarks, loadPublishedQuizzes]);
+
 
   const pageInfo = pageTitles[pathname] || { title: 'EnglishAI', subtitle: '' };
+
+  // If viewing auth routes (/auth/callback, /auth/login), render children directly
+  if (pathname?.startsWith('/auth')) {
+    return <>{children}</>;
+  }
 
   // If not logged in, always render landing page
   if (!isLoggedIn) {
