@@ -8,10 +8,8 @@ import {
   Loader2,
   CheckCircle2,
   ArrowRight,
-  Settings,
   RefreshCw,
 } from 'lucide-react';
-import GoogleApiConfigModal from '@/components/GoogleApiConfigModal';
 
 function CallbackContent() {
   const searchParams = useSearchParams();
@@ -20,7 +18,6 @@ function CallbackContent() {
   
   const [step, setStep] = useState<'reading' | 'backend' | 'success' | 'error'>('reading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
   const calledRef = useRef(false);
 
   useEffect(() => {
@@ -34,17 +31,17 @@ function CallbackContent() {
 
     if (errorParam) {
       setStep('error');
-      setErrorMessage(`Google OAuth Error: ${errorParam}`);
+      setErrorMessage(`Google OAuth: ${errorParam}`);
       return;
     }
 
-    // Direct token provided by Spring OAuth2 backend redirect
+    // Direct token provided by backend redirect
     if (token) {
       setStep('backend');
       try {
         loginWithDirectToken(token, refreshToken || undefined);
         setStep('success');
-        setTimeout(() => router.replace('/'), 1800);
+        setTimeout(() => router.replace('/'), 1500);
       } catch (err: unknown) {
         setStep('error');
         setErrorMessage(err instanceof Error ? err.message : 'Invalid token received.');
@@ -58,21 +55,21 @@ function CallbackContent() {
       return;
     }
 
-    // Authorization code flow -> send to backend API
+    // Authorization code flow
     setStep('backend');
     handleGoogleCallback(code)
       .then(() => {
         setStep('success');
         setTimeout(() => {
           router.replace('/');
-        }, 1500);
+        }, 1200);
       })
       .catch((err) => {
         setStep('error');
         setErrorMessage(
           err instanceof Error
             ? err.message
-            : 'Xác thực với Backend API thất bại. Vui lòng kiểm tra endpoint backend.'
+            : 'Xác thực với tài khoản Google thất bại.'
         );
       });
   }, [searchParams, handleGoogleCallback, loginWithDirectToken, router]);
@@ -91,7 +88,7 @@ function CallbackContent() {
       <div
         style={{
           width: '100%',
-          maxWidth: '440px',
+          maxWidth: '420px',
           background: 'var(--bg-card)',
           borderRadius: '24px',
           border: '1px solid var(--border-strong)',
@@ -144,12 +141,12 @@ function CallbackContent() {
           }}
         >
           {step === 'reading' && 'Đang tiếp nhận mã từ Google…'}
-          {step === 'backend' && 'Đang xác thực với Backend API…'}
-          {step === 'success' && 'Đăng nhập Google thành công!'}
-          {step === 'error' && 'Đăng nhập Google không thành công'}
+          {step === 'backend' && 'Đang xác thực tài khoản…'}
+          {step === 'success' && 'Đăng nhập thành công!'}
+          {step === 'error' && 'Đăng nhập không thành công'}
         </h2>
 
-        {/* Status Subtitle / Error Description */}
+        {/* Status Subtitle */}
         <p
           style={{
             fontSize: '14px',
@@ -158,113 +155,29 @@ function CallbackContent() {
             lineHeight: 1.5,
           }}
         >
-          {step === 'reading' && 'Đã nhận redirect từ Google, đang chuẩn bị kết nối…'}
-          {step === 'backend' && 'Đang gửi mã xác thực tới backend Studish để tạo phiên đăng nhập…'}
+          {step === 'reading' && 'Đã nhận xác nhận từ Google, đang chuẩn bị kết nối…'}
+          {step === 'backend' && 'Đang hoàn tất phiên làm việc…'}
           {step === 'success' && 'Hệ thống đã nhận diện tài khoản. Đang chuyển hướng về trang chủ…'}
-          {step === 'error' && (errorMessage || 'Đã có lỗi xảy ra trong quá trình xác thực với API backend.')}
+          {step === 'error' && (errorMessage || 'Đã có lỗi xảy ra trong quá trình đăng nhập.')}
         </p>
 
-        {/* Step Visual Checklist */}
-        <div
-          style={{
-            background: 'var(--bg-primary)',
-            borderRadius: '14px',
-            border: '1px solid var(--border)',
-            padding: '16px',
-            marginBottom: '24px',
-            textAlign: 'left',
-          }}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <CheckCircle2 size={16} color="#22c55e" />
-              <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>
-                1. Ủy quyền tài khoản Google thành công
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {step === 'reading' ? (
-                <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid var(--border)' }} />
-              ) : step === 'backend' ? (
-                <Loader2 size={16} color="#6c63ff" style={{ animation: 'spin 1s linear infinite' }} />
-              ) : step === 'success' ? (
-                <CheckCircle2 size={16} color="#22c55e" />
-              ) : (
-                <AlertCircle size={16} color="#ef4444" />
-              )}
-              <span
-                style={{
-                  fontSize: '13px',
-                  color:
-                    step === 'backend'
-                      ? '#6c63ff'
-                      : step === 'success'
-                      ? 'var(--text-primary)'
-                      : step === 'error'
-                      ? '#ef4444'
-                      : 'var(--text-muted)',
-                  fontWeight: step === 'backend' ? 600 : 500,
-                }}
-              >
-                2. Trao đổi Token với Backend API
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {step === 'success' ? (
-                <CheckCircle2 size={16} color="#22c55e" />
-              ) : (
-                <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2px solid var(--border)' }} />
-              )}
-              <span
-                style={{
-                  fontSize: '13px',
-                  color: step === 'success' ? '#22c55e' : 'var(--text-muted)',
-                  fontWeight: step === 'success' ? 600 : 500,
-                }}
-              >
-                3. Hoàn tất đăng nhập & Tải dữ liệu người dùng
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons in case of error or completion */}
+        {/* Action Buttons */}
         {step === 'error' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <button
-              onClick={() => setIsConfigOpen(true)}
-              className="btn-primary"
-              style={{
-                width: '100%',
-                padding: '11px',
-                fontSize: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-              }}
-            >
-              <Settings size={16} /> Cấu hình & Test lại API Backend
-            </button>
-
-            <button
-              onClick={() => router.replace('/')}
-              className="btn-secondary"
-              style={{
-                width: '100%',
-                padding: '11px',
-                fontSize: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-              }}
-            >
-              <RefreshCw size={15} /> Quay về Trang chủ
-            </button>
-          </div>
+          <button
+            onClick={() => router.replace('/')}
+            className="btn-secondary"
+            style={{
+              width: '100%',
+              padding: '11px',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            <RefreshCw size={15} /> Quay về Trang chủ
+          </button>
         ) : step === 'success' ? (
           <button
             onClick={() => router.replace('/')}
@@ -294,15 +207,6 @@ function CallbackContent() {
           to   { transform: rotate(360deg); }
         }
       `}</style>
-
-      <GoogleApiConfigModal
-        isOpen={isConfigOpen}
-        onClose={() => setIsConfigOpen(false)}
-        onLoginSuccess={() => {
-          setIsConfigOpen(false);
-          router.replace('/');
-        }}
-      />
     </div>
   );
 }

@@ -10,19 +10,11 @@ import {
   EyeOff,
   AlertCircle,
   CheckCircle,
-  Settings,
-  Sparkles,
   ArrowLeft,
   Loader2,
-  Code2,
-  Play,
-  Key,
-  Globe,
-  Link as LinkIcon,
+  User,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { config } from '@/lib/config';
-import GoogleApiConfigModal from '@/components/GoogleApiConfigModal';
 
 function GoogleIcon() {
   return (
@@ -49,32 +41,23 @@ function GoogleIcon() {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'google' | 'email' | 'api-test'>('google');
+  const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-
-  // Quick API Test states
-  const [testEndpoint, setTestEndpoint] = useState('/api/auth/google');
-  const [testPayloadType, setTestPayloadType] = useState<'code' | 'idToken'>('code');
-  const [testValue, setTestValue] = useState('');
-  const [testResponse, setTestResponse] = useState<string | null>(null);
-  const [isTesting, setIsTesting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const {
     login,
     loginWithGoogle,
-    loginWithGoogleToken,
-    handleGoogleCallback,
     isLoading,
     error,
     successMessage,
     clearError,
-    setError,
   } = useAuthStore();
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await login(email, password);
     const { isLoggedIn } = useAuthStore.getState();
@@ -85,73 +68,8 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = () => {
     clearError();
-    const clientId = config.googleClientId;
-    if (!clientId) {
-      setError(
-        'Chưa thiết lập Google Client ID. Vui lòng chuyển sang tab "Kiểm thử & Cấu hình API" hoặc bấm nút Cài đặt để thiết lập!'
-      );
-      return;
-    }
+    setIsGoogleLoading(true);
     loginWithGoogle();
-  };
-
-  const handleRunApiTest = async () => {
-    if (!testValue.trim()) return;
-    setIsTesting(true);
-    setTestResponse(null);
-    clearError();
-
-    try {
-      if (testPayloadType === 'code') {
-        await handleGoogleCallback(testValue.trim(), testEndpoint.trim());
-        setTestResponse(
-          JSON.stringify(
-            {
-              status: 200,
-              message: 'Xác thực Google Authorization Code thành công với Backend!',
-              data: {
-                user: useAuthStore.getState().user,
-                tokenStored: true,
-              },
-            },
-            null,
-            2
-          )
-        );
-      } else {
-        await loginWithGoogleToken(testValue.trim(), testEndpoint.trim());
-        setTestResponse(
-          JSON.stringify(
-            {
-              status: 200,
-              message: 'Xác thực Google ID Token thành công với Backend!',
-              data: {
-                user: useAuthStore.getState().user,
-                tokenStored: true,
-              },
-            },
-            null,
-            2
-          )
-        );
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setTestResponse(
-        JSON.stringify(
-          {
-            error: true,
-            status: 400,
-            message: msg,
-            tip: 'Hãy đảm bảo Backend Spring Boot đã bật endpoint này và Google Client ID/Secret trùng khớp.',
-          },
-          null,
-          2
-        )
-      );
-    } finally {
-      setIsTesting(false);
-    }
   };
 
   return (
@@ -167,7 +85,7 @@ export default function LoginPage() {
       }}
     >
       {/* Top Bar Back Link */}
-      <div style={{ width: '100%', maxWidth: '520px', marginBottom: '16px' }}>
+      <div style={{ width: '100%', maxWidth: '440px', marginBottom: '16px' }}>
         <Link
           href="/"
           style={{
@@ -188,7 +106,7 @@ export default function LoginPage() {
       <div
         style={{
           width: '100%',
-          maxWidth: '520px',
+          maxWidth: '440px',
           background: 'var(--bg-card)',
           borderRadius: '28px',
           border: '1px solid var(--border-strong)',
@@ -198,95 +116,54 @@ export default function LoginPage() {
         }}
       >
         {/* Logo & Title */}
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div
             style={{
-              width: '64px',
-              height: '64px',
+              width: '60px',
+              height: '60px',
               background: 'linear-gradient(135deg, #6c63ff, #8b5cf6)',
-              borderRadius: '20px',
-              margin: '0 auto 16px',
+              borderRadius: '18px',
+              margin: '0 auto 14px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 10px 30px rgba(108,99,255,0.4)',
+              boxShadow: '0 10px 25px rgba(108,99,255,0.35)',
             }}
           >
-            <Zap size={32} color="white" />
+            <Zap size={30} color="white" />
           </div>
-          <h1 style={{ fontSize: '26px', fontWeight: 800, margin: '0 0 6px 0' }} className="gradient-text">
-            Studish English AI
+          <h1 style={{ fontSize: '24px', fontWeight: 800, margin: '0 0 6px 0' }} className="gradient-text">
+            {mode === 'login' ? 'Chào mừng trở lại!' : 'Tạo tài khoản mới'}
           </h1>
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0 }}>
-            Đăng nhập & Kết nối Backend API với Google Authentication
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
+            {mode === 'login'
+              ? 'Đăng nhập để tiếp tục luyện tập Listening & Reading'
+              : 'Bắt đầu hành trình nâng cao trình độ Tiếng Anh cùng AI'}
           </p>
         </div>
 
-        {/* Navigation Tabs */}
+        {/* Mode Switch Tabs */}
         <div
-          style={{
-            display: 'flex',
-            background: 'rgba(0,0,0,0.05)',
-            padding: '4px',
-            borderRadius: '14px',
-            marginBottom: '24px',
-            border: '1px solid var(--border)',
-          }}
+          className="flex p-1 rounded-xl mb-5"
+          style={{ background: 'rgba(0,0,0,0.05)', border: '1px solid var(--border)' }}
         >
-          <button
-            onClick={() => setActiveTab('google')}
-            style={{
-              flex: 1,
-              padding: '10px 8px',
-              borderRadius: '10px',
-              fontSize: '13px',
-              fontWeight: 600,
-              border: 'none',
-              cursor: 'pointer',
-              background: activeTab === 'google' ? 'var(--bg-card)' : 'transparent',
-              color: activeTab === 'google' ? '#5b5bd6' : 'var(--text-secondary)',
-              boxShadow: activeTab === 'google' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-              transition: 'all 0.2s',
-            }}
-          >
-            Google Sign-In
-          </button>
-          <button
-            onClick={() => setActiveTab('api-test')}
-            style={{
-              flex: 1,
-              padding: '10px 8px',
-              borderRadius: '10px',
-              fontSize: '13px',
-              fontWeight: 600,
-              border: 'none',
-              cursor: 'pointer',
-              background: activeTab === 'api-test' ? 'var(--bg-card)' : 'transparent',
-              color: activeTab === 'api-test' ? '#5b5bd6' : 'var(--text-secondary)',
-              boxShadow: activeTab === 'api-test' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-              transition: 'all 0.2s',
-            }}
-          >
-            Test API Backend
-          </button>
-          <button
-            onClick={() => setActiveTab('email')}
-            style={{
-              flex: 1,
-              padding: '10px 8px',
-              borderRadius: '10px',
-              fontSize: '13px',
-              fontWeight: 600,
-              border: 'none',
-              cursor: 'pointer',
-              background: activeTab === 'email' ? 'var(--bg-card)' : 'transparent',
-              color: activeTab === 'email' ? '#5b5bd6' : 'var(--text-secondary)',
-              boxShadow: activeTab === 'email' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-              transition: 'all 0.2s',
-            }}
-          >
-            Email / Pass
-          </button>
+          {(['login', 'register'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all"
+              style={{
+                border: 'none',
+                cursor: 'pointer',
+                background:
+                  mode === m ? 'linear-gradient(135deg, #6c63ff, #8b5cf6)' : 'transparent',
+                color: mode === m ? 'white' : 'var(--text-secondary)',
+                boxShadow: mode === m ? '0 2px 10px rgba(108,99,255,0.3)' : 'none',
+              }}
+            >
+              {m === 'login' ? 'Đăng nhập' : 'Đăng ký'}
+            </button>
+          ))}
         </div>
 
         {/* Global Notifications */}
@@ -326,248 +203,74 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* TAB 1: GOOGLE SIGN-IN */}
-        {activeTab === 'google' && (
-          <div>
-            <div
-              style={{
-                background: 'linear-gradient(135deg, rgba(66,133,244,0.06), rgba(52,168,83,0.06))',
-                borderRadius: '18px',
-                border: '1px solid rgba(66,133,244,0.2)',
-                padding: '24px 20px',
-                textAlign: 'center',
-                marginBottom: '24px',
-              }}
-            >
-              <div style={{ marginBottom: '16px' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 6px 0', color: 'var(--text-primary)' }}>
-                  Đăng nhập 1-Chạm qua Google
-                </h3>
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
-                  Xác thực tài khoản Google và tạo phiên làm việc với Backend Studish API ({config.apiBaseUrl})
-                </p>
-              </div>
+        {/* GOOGLE SIGN-IN BUTTON */}
+        <button
+          id="btn-google-login-page"
+          onClick={handleGoogleSignIn}
+          disabled={isGoogleLoading || isLoading}
+          style={{
+            width: '100%',
+            padding: '13px 20px',
+            borderRadius: '14px',
+            border: '1.5px solid var(--border-strong)',
+            background: 'var(--bg-secondary)',
+            cursor: isGoogleLoading ? 'wait' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px',
+            fontSize: '14px',
+            fontWeight: 600,
+            color: 'var(--text-primary)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+            transition: 'all 0.2s ease',
+            marginBottom: '20px',
+            opacity: isGoogleLoading ? 0.75 : 1,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.08)';
+            e.currentTarget.style.borderColor = '#5b5bd6';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
+            e.currentTarget.style.borderColor = 'var(--border-strong)';
+          }}
+        >
+          {isGoogleLoading ? (
+            <Loader2 size={20} color="#5b5bd6" style={{ animation: 'spin 1s linear infinite' }} />
+          ) : (
+            <GoogleIcon />
+          )}
+          <span>{isGoogleLoading ? 'Đang kết nối với Google…' : 'Đăng nhập với Google'}</span>
+        </button>
 
-              <button
-                id="btn-google-login-page"
-                onClick={handleGoogleSignIn}
-                disabled={isLoading}
-                style={{
-                  width: '100%',
-                  padding: '14px 20px',
-                  borderRadius: '14px',
-                  border: '1.5px solid var(--border-strong)',
-                  background: 'var(--bg-card)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '12px',
-                  fontSize: '15px',
-                  fontWeight: 700,
-                  color: 'var(--text-primary)',
-                  boxShadow: '0 4px 14px rgba(0,0,0,0.08)',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.12)';
-                  e.currentTarget.style.borderColor = '#4285F4';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.08)';
-                  e.currentTarget.style.borderColor = 'var(--border-strong)';
-                }}
-              >
-                <GoogleIcon />
-                <span>Tiếp tục với Google</span>
-              </button>
+        {/* Divider */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            marginBottom: '20px',
+          }}
+        >
+          <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>
+            hoặc với Email
+          </span>
+          <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+        </div>
 
-              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
-                <button
-                  onClick={() => setIsConfigModalOpen(true)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    color: '#5b5bd6',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '4px 8px',
-                  }}
-                >
-                  <Settings size={14} /> Cấu hình Endpoint & Google Client ID
-                </button>
-              </div>
-            </div>
-
-            {/* Quick config preview */}
-            <div
-              style={{
-                background: 'var(--bg-primary)',
-                borderRadius: '14px',
-                padding: '14px 16px',
-                border: '1px solid var(--border)',
-                fontSize: '12px',
-              }}
-            >
-              <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                Thông số cấu hình hiện tại:
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', color: 'var(--text-secondary)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Backend Base:</span>
-                  <code style={{ color: '#5b5bd6' }}>{config.apiBaseUrl}</code>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Google Endpoint:</span>
-                  <code style={{ color: '#5b5bd6' }}>{config.googleBackendEndpoint}</code>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Google Client ID:</span>
-                  <span style={{ color: config.googleClientId ? '#22c55e' : '#ef4444' }}>
-                    {config.googleClientId ? `${config.googleClientId.slice(0, 16)}...` : 'Chưa cấu hình'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: API BACKEND TESTER */}
-        {activeTab === 'api-test' && (
-          <div>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>
-                Backend Endpoint
-              </label>
-              <input
-                type="text"
-                value={testEndpoint}
-                onChange={(e) => setTestEndpoint(e.target.value)}
-                placeholder="/api/auth/google"
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  borderRadius: '10px',
-                  border: '1px solid var(--border)',
-                  background: 'var(--bg-primary)',
-                  fontSize: '13px',
-                  color: 'var(--text-primary)',
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>
-                Loại dữ liệu gửi test
-              </label>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <label style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                  <input
-                    type="radio"
-                    name="payloadType"
-                    checked={testPayloadType === 'code'}
-                    onChange={() => setTestPayloadType('code')}
-                  />
-                  Authorization Code (`{'{'} code: "..." {'}'}`)
-                </label>
-                <label style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                  <input
-                    type="radio"
-                    name="payloadType"
-                    checked={testPayloadType === 'idToken'}
-                    onChange={() => setTestPayloadType('idToken')}
-                  />
-                  Google ID Token (`{'{'} idToken: "..." {'}'}`)
-                </label>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '6px' }}>
-                Giá trị Token / Code
-              </label>
-              <textarea
-                rows={3}
-                value={testValue}
-                onChange={(e) => setTestValue(e.target.value)}
-                placeholder={
-                  testPayloadType === 'code'
-                    ? 'Dán Authorization code (4/0A...)...'
-                    : 'Dán Google JWT ID token (eyJhbGciOi...)...'
-                }
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  borderRadius: '10px',
-                  border: '1px solid var(--border)',
-                  background: 'var(--bg-primary)',
-                  fontSize: '12px',
-                  color: 'var(--text-primary)',
-                  fontFamily: 'monospace',
-                  resize: 'vertical',
-                }}
-              />
-            </div>
-
-            <button
-              onClick={handleRunApiTest}
-              disabled={isTesting || !testValue.trim()}
-              className="btn-primary"
-              style={{
-                width: '100%',
-                padding: '12px',
-                fontSize: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                opacity: !testValue.trim() || isTesting ? 0.6 : 1,
-              }}
-            >
-              {isTesting ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Play size={16} />}
-              Gửi yêu cầu kiểm tra Backend API
-            </button>
-
-            {testResponse && (
-              <div style={{ marginTop: '16px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                  Kết quả trả về từ Backend:
-                </div>
-                <pre
-                  style={{
-                    background: 'rgba(0,0,0,0.85)',
-                    color: testResponse.includes('"error": true') ? '#ff8080' : '#4ade80',
-                    padding: '12px',
-                    borderRadius: '10px',
-                    fontSize: '11px',
-                    maxHeight: '180px',
-                    overflowY: 'auto',
-                    margin: 0,
-                    fontFamily: 'monospace',
-                  }}
-                >
-                  {testResponse}
-                </pre>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 3: EMAIL / PASSWORD */}
-        {activeTab === 'email' && (
-          <form onSubmit={handleEmailLogin}>
+        {/* EMAIL FORM */}
+        <form onSubmit={handleEmailSubmit}>
+          {mode === 'register' && (
             <div className="mb-4">
               <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                Email / Username
+                Họ và tên
               </label>
               <div className="relative">
-                <Mail
+                <User
                   size={16}
                   style={{
                     position: 'absolute',
@@ -580,92 +283,109 @@ export default function LoginPage() {
                 <input
                   type="text"
                   className="input-field"
-                  placeholder="user@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Nguyễn Văn A"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   style={{ paddingLeft: '42px', width: '100%', borderRadius: '10px', padding: '10px 14px 10px 42px' }}
                 />
               </div>
             </div>
+          )}
 
-            <div className="mb-6">
-              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                Mật khẩu
-              </label>
-              <div className="relative">
-                <Lock
-                  size={16}
-                  style={{
-                    position: 'absolute',
-                    left: '14px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'var(--text-muted)',
-                  }}
-                />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  className="input-field"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={{
-                    paddingLeft: '42px',
-                    paddingRight: '42px',
-                    width: '100%',
-                    borderRadius: '10px',
-                    padding: '10px 42px 10px 42px',
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '14px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
+          <div className="mb-4">
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+              Email
+            </label>
+            <div className="relative">
+              <Mail
+                size={16}
+                style={{
+                  position: 'absolute',
+                  left: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)',
+                }}
+              />
+              <input
+                type="email"
+                className="input-field"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{ paddingLeft: '42px', width: '100%', borderRadius: '10px', padding: '10px 14px 10px 42px' }}
+              />
             </div>
+          </div>
 
-            <button
-              type="submit"
-              className="btn-primary w-full"
-              style={{
-                padding: '12px',
-                fontSize: '15px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                opacity: isLoading ? 0.7 : 1,
-                borderRadius: '12px',
-              }}
-              disabled={isLoading}
-            >
-              {isLoading && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
-              Đăng nhập với Email
-            </button>
-          </form>
-        )}
+          <div className="mb-6">
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+              Mật khẩu
+            </label>
+            <div className="relative">
+              <Lock
+                size={16}
+                style={{
+                  position: 'absolute',
+                  left: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)',
+                }}
+              />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="input-field"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{
+                  paddingLeft: '42px',
+                  paddingRight: '42px',
+                  width: '100%',
+                  borderRadius: '10px',
+                  padding: '10px 42px 10px 42px',
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="btn-primary w-full"
+            style={{
+              padding: '12px',
+              fontSize: '15px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              opacity: isLoading ? 0.7 : 1,
+              borderRadius: '12px',
+            }}
+            disabled={isLoading}
+          >
+            {isLoading && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
+            {mode === 'login' ? 'Đăng nhập' : 'Đăng ký tài khoản'}
+          </button>
+        </form>
       </div>
-
-      <GoogleApiConfigModal
-        isOpen={isConfigModalOpen}
-        onClose={() => setIsConfigModalOpen(false)}
-        onLoginSuccess={() => {
-          setIsConfigModalOpen(false);
-          router.push('/');
-        }}
-      />
     </div>
   );
 }

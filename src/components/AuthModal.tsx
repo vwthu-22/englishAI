@@ -10,12 +10,11 @@ import {
   Zap,
   Loader2,
   AlertCircle,
-  Settings,
   CheckCircle,
+  Sparkles,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { config } from '@/lib/config';
-import GoogleApiConfigModal from './GoogleApiConfigModal';
+import { TEST_ACCOUNT } from '@/services/authService';
 
 interface AuthModalProps {
   onClose: () => void;
@@ -52,7 +51,7 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const {
     login,
@@ -61,7 +60,6 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
     error,
     successMessage,
     clearError,
-    setError,
   } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,395 +69,403 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
     if (isLoggedIn) onClose();
   };
 
+  const handleQuickTestLogin = async () => {
+    setEmail(TEST_ACCOUNT.email);
+    setPassword(TEST_ACCOUNT.password);
+    await login(TEST_ACCOUNT.email, TEST_ACCOUNT.password);
+    const { isLoggedIn } = useAuthStore.getState();
+    if (isLoggedIn) onClose();
+  };
+
   const handleGoogleClick = () => {
     clearError();
-    const clientId = config.googleClientId;
-    if (!clientId) {
-      setError(
-        'Chưa có Google Client ID. Vui lòng bấm vào biểu tượng ⚙️ Cài đặt bên cạnh để nhập Client ID hoặc kiểm thử API Backend!'
-      );
-      setIsConfigOpen(true);
-      return;
-    }
+    setIsGoogleLoading(true);
     loginWithGoogle();
   };
 
   return (
-    <>
+    <div
+      className="modal-overlay"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9000,
+        padding: '16px',
+      }}
+    >
       <div
-        className="modal-overlay"
-        onClick={(e) => e.target === e.currentTarget && onClose()}
+        className="modal-content"
         style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.65)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9000,
-          padding: '16px',
+          maxWidth: '430px',
+          width: '100%',
+          position: 'relative',
+          background: 'var(--bg-card)',
+          borderRadius: '24px',
+          border: '1px solid var(--border-strong)',
+          padding: '32px 28px',
+          boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
         }}
       >
+        {/* Logo */}
+        <div className="text-center mb-5">
+          <div
+            style={{
+              width: '56px',
+              height: '56px',
+              background: 'linear-gradient(135deg, #6c63ff, #a78bfa)',
+              borderRadius: '16px',
+              margin: '0 auto 12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 30px rgba(108,99,255,0.4)',
+            }}
+          >
+            <Zap size={28} color="white" />
+          </div>
+          <h2 style={{ fontSize: '24px', fontWeight: 800 }} className="gradient-text">
+            {mode === 'login' ? 'Chào mừng bạn!' : 'Tạo tài khoản mới'}
+          </h2>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+            {mode === 'login'
+              ? 'Đăng nhập để vào hệ thống luyện thi EnglishAI'
+              : 'Bắt đầu nâng cao kỹ năng Tiếng Anh'}
+          </p>
+        </div>
+
+        {/* Test Account Quick Banner */}
         <div
-          className="modal-content"
           style={{
-            maxWidth: '430px',
-            width: '100%',
-            position: 'relative',
-            background: 'var(--bg-card)',
-            borderRadius: '24px',
-            border: '1px solid var(--border-strong)',
-            padding: '32px 28px',
-            boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
+            background: 'rgba(108,99,255,0.08)',
+            border: '1px dashed rgba(108,99,255,0.4)',
+            borderRadius: '14px',
+            padding: '12px 14px',
+            marginBottom: '18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '10px',
           }}
         >
-          {/* Logo */}
-          <div className="text-center mb-6">
-            <div
-              style={{
-                width: '56px',
-                height: '56px',
-                background: 'linear-gradient(135deg, #6c63ff, #a78bfa)',
-                borderRadius: '16px',
-                margin: '0 auto 12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 0 30px rgba(108,99,255,0.4)',
-              }}
-            >
-              <Zap size={28} color="white" />
+          <div style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: 1.4 }}>
+            <div style={{ fontWeight: 700, color: '#5b5bd6', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Sparkles size={13} /> Tài khoản Test:
             </div>
-            <h2 style={{ fontSize: '24px', fontWeight: 800 }} className="gradient-text">
-              {mode === 'login' ? 'Welcome back!' : 'Create an account'}
-            </h2>
-            <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-              {mode === 'login'
-                ? 'Sign in to continue learning with Studish AI'
-                : 'Start your English learning journey'}
-            </p>
+            <div style={{ color: 'var(--text-secondary)', marginTop: '2px' }}>
+              Email: <b>{TEST_ACCOUNT.email}</b> | Pass: <b>{TEST_ACCOUNT.password}</b>
+            </div>
           </div>
-
-          {/* Mode Switch Tabs */}
-          <div
-            className="flex p-1 rounded-xl mb-5"
-            style={{ background: 'rgba(0,0,0,0.05)', border: '1px solid var(--border)' }}
+          <button
+            type="button"
+            onClick={handleQuickTestLogin}
+            disabled={isLoading}
+            style={{
+              background: 'linear-gradient(135deg, #5b5bd6, #7c3aed)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '6px 12px',
+              fontSize: '11px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 8px rgba(91,91,214,0.3)',
+            }}
           >
-            {(['login', 'register'] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all"
-                style={{
-                  border: 'none',
-                  cursor: 'pointer',
-                  background:
-                    mode === m ? 'linear-gradient(135deg, #6c63ff, #8b5cf6)' : 'transparent',
-                  color: mode === m ? 'white' : 'var(--text-secondary)',
-                  boxShadow: mode === m ? '0 2px 10px rgba(108,99,255,0.3)' : 'none',
-                }}
-              >
-                {m === 'login' ? 'Sign In' : 'Sign Up'}
-              </button>
-            ))}
-          </div>
+            Đăng nhập ngay
+          </button>
+        </div>
 
-          {/* Error Banner */}
-          {error && (
-            <div
+        {/* Mode Switch Tabs */}
+        <div
+          className="flex p-1 rounded-xl mb-5"
+          style={{ background: 'rgba(0,0,0,0.05)', border: '1px solid var(--border)' }}
+        >
+          {(['login', 'register'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all"
               style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '10px',
-                padding: '12px 14px',
-                borderRadius: '12px',
-                marginBottom: '16px',
-                background: 'rgba(239,68,68,0.08)',
-                border: '1px solid rgba(239,68,68,0.2)',
+                border: 'none',
+                cursor: 'pointer',
+                background:
+                  mode === m ? 'linear-gradient(135deg, #6c63ff, #8b5cf6)' : 'transparent',
+                color: mode === m ? 'white' : 'var(--text-secondary)',
+                boxShadow: mode === m ? '0 2px 10px rgba(108,99,255,0.3)' : 'none',
               }}
             >
-              <AlertCircle size={16} color="#ef4444" style={{ marginTop: '2px', flexShrink: 0 }} />
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: '13px', color: '#ef4444', margin: 0, lineHeight: 1.4 }}>
-                  {error}
-                </p>
-              </div>
-            </div>
-          )}
+              {m === 'login' ? 'Đăng nhập' : 'Đăng ký'}
+            </button>
+          ))}
+        </div>
 
-          {/* Success Banner */}
-          {successMessage && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '12px 14px',
-                borderRadius: '12px',
-                marginBottom: '16px',
-                background: 'rgba(34,197,94,0.08)',
-                border: '1px solid rgba(34,197,94,0.2)',
-              }}
-            >
-              <CheckCircle size={16} color="#22c55e" style={{ flexShrink: 0 }} />
-              <p style={{ fontSize: '13px', color: '#22c55e', margin: 0 }}>
-                {successMessage}
+        {/* Error Banner */}
+        {error && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '10px',
+              padding: '12px 14px',
+              borderRadius: '12px',
+              marginBottom: '16px',
+              background: 'rgba(239,68,68,0.08)',
+              border: '1px solid rgba(239,68,68,0.2)',
+            }}
+          >
+            <AlertCircle size={16} color="#ef4444" style={{ marginTop: '2px', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: '13px', color: '#ef4444', margin: 0, lineHeight: 1.4 }}>
+                {error}
               </p>
             </div>
-          )}
-
-          {/* ─── Google OAuth Button & Settings Trigger ──────────────────── */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-            <button
-              id="btn-google-signin"
-              type="button"
-              onClick={handleGoogleClick}
-              className="w-full flex items-center justify-center gap-3 transition-all"
-              style={{
-                flex: 1,
-                padding: '12px 16px',
-                borderRadius: '12px',
-                border: '1.5px solid var(--border-strong)',
-                background: 'var(--bg-secondary)',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                position: 'relative',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.08)';
-                e.currentTarget.style.borderColor = '#5b5bd6';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
-                e.currentTarget.style.borderColor = 'var(--border-strong)';
-              }}
-            >
-              <GoogleIcon />
-              <span>Continue with Google</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsConfigOpen(true)}
-              title="Cấu hình & Test Google Backend API"
-              style={{
-                padding: '0 12px',
-                borderRadius: '12px',
-                border: '1.5px solid var(--border-strong)',
-                background: 'var(--bg-secondary)',
-                color: 'var(--text-secondary)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#5b5bd6';
-                e.currentTarget.style.borderColor = '#5b5bd6';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--text-secondary)';
-                e.currentTarget.style.borderColor = 'var(--border-strong)';
-              }}
-            >
-              <Settings size={18} />
-            </button>
           </div>
+        )}
 
-          {/* Divider */}
+        {/* Success Banner */}
+        {successMessage && (
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
-              marginBottom: '20px',
+              gap: '10px',
+              padding: '12px 14px',
+              borderRadius: '12px',
+              marginBottom: '16px',
+              background: 'rgba(34,197,94,0.08)',
+              border: '1px solid rgba(34,197,94,0.2)',
             }}
           >
-            <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>
-              or continue with email
-            </span>
-            <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+            <CheckCircle size={16} color="#22c55e" style={{ flexShrink: 0 }} />
+            <p style={{ fontSize: '13px', color: '#22c55e', margin: 0 }}>
+              {successMessage}
+            </p>
+          </div>
+        )}
+
+        {/* Google OAuth Button */}
+        <button
+          id="btn-google-signin"
+          type="button"
+          onClick={handleGoogleClick}
+          disabled={isGoogleLoading || isLoading}
+          className="w-full flex items-center justify-center gap-3 transition-all"
+          style={{
+            width: '100%',
+            padding: '12px 16px',
+            borderRadius: '12px',
+            border: '1.5px solid var(--border-strong)',
+            background: 'var(--bg-secondary)',
+            cursor: isGoogleLoading ? 'wait' : 'pointer',
+            fontSize: '14px',
+            fontWeight: 600,
+            color: 'var(--text-primary)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+            marginBottom: '18px',
+            opacity: isGoogleLoading ? 0.75 : 1,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.08)';
+            e.currentTarget.style.borderColor = '#5b5bd6';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
+            e.currentTarget.style.borderColor = 'var(--border-strong)';
+          }}
+        >
+          {isGoogleLoading ? (
+            <Loader2 size={20} color="#5b5bd6" style={{ animation: 'spin 1s linear infinite' }} />
+          ) : (
+            <GoogleIcon />
+          )}
+          <span>{isGoogleLoading ? 'Đang kết nối Google…' : 'Tiếp tục với Google'}</span>
+        </button>
+
+        {/* Divider */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            marginBottom: '18px',
+          }}
+        >
+          <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>
+            hoặc với Email
+          </span>
+          <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+        </div>
+
+        {/* Email / Password Form */}
+        <form onSubmit={handleSubmit}>
+          {mode === 'register' && (
+            <div className="mb-3">
+              <label
+                className="block text-xs font-semibold mb-1"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                Họ và tên
+              </label>
+              <div className="relative">
+                <User
+                  size={16}
+                  style={{
+                    position: 'absolute',
+                    left: '14px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)',
+                  }}
+                />
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Nguyễn Văn A"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  style={{
+                    paddingLeft: '42px',
+                    width: '100%',
+                    borderRadius: '10px',
+                    paddingTop: '9px',
+                    paddingBottom: '9px',
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="mb-3">
+            <label
+              className="block text-xs font-semibold mb-1"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              Email
+            </label>
+            <div className="relative">
+              <Mail
+                size={16}
+                style={{
+                  position: 'absolute',
+                  left: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)',
+                }}
+              />
+              <input
+                type="email"
+                className="input-field"
+                placeholder="demo@studish.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{
+                  paddingLeft: '42px',
+                  width: '100%',
+                  borderRadius: '10px',
+                  paddingTop: '9px',
+                  paddingBottom: '9px',
+                }}
+              />
+            </div>
           </div>
 
-          {/* Email / Password Form */}
-          <form onSubmit={handleSubmit}>
-            {mode === 'register' && (
-              <div className="mb-4">
-                <label
-                  className="block text-xs font-semibold mb-1.5"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User
-                    size={16}
-                    style={{
-                      position: 'absolute',
-                      left: '14px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: 'var(--text-muted)',
-                    }}
-                  />
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="John Smith"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    style={{
-                      paddingLeft: '42px',
-                      width: '100%',
-                      borderRadius: '10px',
-                      paddingTop: '10px',
-                      paddingBottom: '10px',
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="mb-4">
-              <label
-                className="block text-xs font-semibold mb-1.5"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                Email
-              </label>
-              <div className="relative">
-                <Mail
-                  size={16}
-                  style={{
-                    position: 'absolute',
-                    left: '14px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'var(--text-muted)',
-                  }}
-                />
-                <input
-                  type="email"
-                  className="input-field"
-                  placeholder="email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={{
-                    paddingLeft: '42px',
-                    width: '100%',
-                    borderRadius: '10px',
-                    paddingTop: '10px',
-                    paddingBottom: '10px',
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <label
-                className="block text-xs font-semibold mb-1.5"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                Password
-              </label>
-              <div className="relative">
-                <Lock
-                  size={16}
-                  style={{
-                    position: 'absolute',
-                    left: '14px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'var(--text-muted)',
-                  }}
-                />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  className="input-field"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={{
-                    paddingLeft: '42px',
-                    paddingRight: '42px',
-                    width: '100%',
-                    borderRadius: '10px',
-                    paddingTop: '10px',
-                    paddingBottom: '10px',
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '14px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="btn-primary w-full"
-              style={{
-                padding: '12px',
-                fontSize: '15px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                opacity: isLoading ? 0.7 : 1,
-                borderRadius: '12px',
-              }}
-              disabled={isLoading}
+          <div className="mb-5">
+            <label
+              className="block text-xs font-semibold mb-1"
+              style={{ color: 'var(--text-secondary)' }}
             >
-              {isLoading && (
-                <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
-              )}
-              {mode === 'login' ? 'Sign In' : 'Create Account'}
-            </button>
-          </form>
+              Mật khẩu
+            </label>
+            <div className="relative">
+              <Lock
+                size={16}
+                style={{
+                  position: 'absolute',
+                  left: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)',
+                }}
+              />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="input-field"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{
+                  paddingLeft: '42px',
+                  paddingRight: '42px',
+                  width: '100%',
+                  borderRadius: '10px',
+                  paddingTop: '9px',
+                  paddingBottom: '9px',
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
 
-          {/* Close button */}
           <button
-            onClick={onClose}
-            className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-lg"
+            type="submit"
+            className="btn-primary w-full"
             style={{
-              background: 'rgba(0,0,0,0.05)',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--text-secondary)',
+              padding: '12px',
+              fontSize: '15px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              opacity: isLoading ? 0.7 : 1,
+              borderRadius: '12px',
             }}
+            disabled={isLoading}
           >
-            <X size={16} />
+            {isLoading && (
+              <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+            )}
+            {mode === 'login' ? 'Đăng nhập' : 'Đăng ký tài khoản'}
           </button>
-        </div>
-      </div>
+        </form>
 
-      {/* Config & Tester Modal */}
-      <GoogleApiConfigModal
-        isOpen={isConfigOpen}
-        onClose={() => setIsConfigOpen(false)}
-        onLoginSuccess={() => {
-          setIsConfigOpen(false);
-          onClose();
-        }}
-      />
-    </>
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-lg"
+          style={{
+            background: 'rgba(0,0,0,0.05)',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'var(--text-secondary)',
+          }}
+        >
+          <X size={16} />
+        </button>
+      </div>
+    </div>
   );
 }
