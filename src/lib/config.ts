@@ -9,7 +9,10 @@ export const config = {
       const custom = localStorage.getItem('studish_api_base_url');
       if (custom) return custom;
     }
-    return process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080';
+    return (
+      process.env.NEXT_PUBLIC_API_BASE_URL ??
+      'https://five-different-currency-watt.trycloudflare.com'
+    );
   },
 
   /** Google OAuth 2.0 Client ID (from Google Cloud Console) */
