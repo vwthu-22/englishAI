@@ -11,10 +11,8 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
-  Sparkles,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { TEST_ACCOUNT } from '@/services/authService';
 
 interface AuthModalProps {
   onClose: () => void;
@@ -65,14 +63,6 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await login(email, password);
-    const { isLoggedIn } = useAuthStore.getState();
-    if (isLoggedIn) onClose();
-  };
-
-  const handleQuickTestLogin = async () => {
-    setEmail(TEST_ACCOUNT.email);
-    setPassword(TEST_ACCOUNT.password);
-    await login(TEST_ACCOUNT.email, TEST_ACCOUNT.password);
     const { isLoggedIn } = useAuthStore.getState();
     if (isLoggedIn) onClose();
   };
@@ -139,49 +129,6 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
           </p>
         </div>
 
-        {/* Test Account Quick Banner */}
-        <div
-          style={{
-            background: 'rgba(108,99,255,0.08)',
-            border: '1px dashed rgba(108,99,255,0.4)',
-            borderRadius: '14px',
-            padding: '12px 14px',
-            marginBottom: '18px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '10px',
-          }}
-        >
-          <div style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: 1.4 }}>
-            <div style={{ fontWeight: 700, color: '#5b5bd6', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Sparkles size={13} /> Tài khoản Test:
-            </div>
-            <div style={{ color: 'var(--text-secondary)', marginTop: '2px' }}>
-              Email: <b>{TEST_ACCOUNT.email}</b> | Pass: <b>{TEST_ACCOUNT.password}</b>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={handleQuickTestLogin}
-            disabled={isLoading}
-            style={{
-              background: 'linear-gradient(135deg, #5b5bd6, #7c3aed)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '6px 12px',
-              fontSize: '11px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              boxShadow: '0 2px 8px rgba(91,91,214,0.3)',
-            }}
-          >
-            Đăng nhập ngay
-          </button>
-        </div>
-
         {/* Mode Switch Tabs */}
         <div
           className="flex p-1 rounded-xl mb-5"
@@ -190,7 +137,10 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
           {(['login', 'register'] as const).map((m) => (
             <button
               key={m}
-              onClick={() => setMode(m)}
+              onClick={() => {
+                clearError();
+                setMode(m);
+              }}
               className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all"
               style={{
                 border: 'none',
@@ -348,7 +298,7 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
               className="block text-xs font-semibold mb-1"
               style={{ color: 'var(--text-secondary)' }}
             >
-              Email
+              Email / Tên đăng nhập
             </label>
             <div className="relative">
               <Mail
@@ -362,11 +312,12 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
                 }}
               />
               <input
-                type="email"
+                type="text"
                 className="input-field"
-                placeholder="demo@studish.com"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
                 style={{
                   paddingLeft: '42px',
                   width: '100%',
@@ -402,6 +353,7 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
                 style={{
                   paddingLeft: '42px',
                   paddingRight: '42px',
