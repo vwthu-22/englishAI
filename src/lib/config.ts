@@ -11,7 +11,7 @@ export const config = {
     }
     return (
       process.env.NEXT_PUBLIC_API_BASE_URL ??
-      'https://five-different-currency-watt.trycloudflare.com'
+      'https://desperate-selective-nam-performances.trycloudflare.com'
     );
   },
 
