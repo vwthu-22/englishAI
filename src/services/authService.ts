@@ -110,8 +110,7 @@ export const authService = {
   redirectToGoogle(customClientId?: string, customRedirectUri?: string): void {
     const clientId = customClientId || config.googleClientId;
     if (!clientId) {
-      window.location.href = `${window.location.origin}/auth/callback?code=demo_google_auth_code`;
-      return;
+      throw new Error('Google Client ID chưa được cấu hình. Vui lòng liên hệ quản trị viên.');
     }
     const url = this.getGoogleAuthUrl(clientId, customRedirectUri);
     window.location.href = url;
