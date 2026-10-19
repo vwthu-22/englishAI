@@ -67,14 +67,43 @@ export const authService = {
   },
 
   /**
-   * Fetch the currently logged-in user's profile.
-   * Derived from the stored JWT (or /api/users/me if available).
+   * Fetch the currently logged-in user's profile from the backend.
+   * Calls: GET /api/users/me/profile
+   * Falls back to JWT decode if the request fails.
    */
   getMe: async (): Promise<User | null> => {
     if (typeof window === 'undefined') return null;
     const token = localStorage.getItem('access_token');
     if (!token) return null;
-    return userFromToken(token);
+
+    try {
+      const profile = await api.get<{
+        id?: string | number;
+        username?: string;
+        fullName?: string;
+        name?: string;
+        email?: string;
+        avatar?: string;
+        picture?: string;
+        level?: string;
+        joinDate?: string;
+        createdAt?: string;
+        streak?: number;
+      }>('/api/users/me/profile');
+
+      return {
+        id: String(profile.id ?? 'user-1'),
+        name: profile.fullName ?? profile.name ?? profile.username ?? profile.email ?? 'Studish Learner',
+        email: profile.email ?? '',
+        avatar: profile.avatar ?? profile.picture,
+        level: profile.level ?? 'B1',
+        joinDate: profile.joinDate ?? profile.createdAt?.split('T')[0] ?? new Date().toISOString().split('T')[0],
+        streak: profile.streak ?? 1,
+      };
+    } catch {
+      // API failed — fall back to decoding the stored token
+      return userFromToken(token);
+    }
   },
 
   /**
