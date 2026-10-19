@@ -113,6 +113,8 @@ export interface BeQuestionResponse {
   options: string | null;
   correctAnswer: string;
   explanation: string;
+  /** MM:SS timestamp for listening questions */
+  audioTimestamp?: string;
 }
 
 export interface BeExerciseResponse {
@@ -166,6 +168,17 @@ export interface BeExerciseResultResponse {
   completed: boolean;
   questionResults: BeQuestionResultDetail[];
   createdAt: string;
+}
+
+/** Profile data returned by GET /api/users/me/profile */
+export interface BeUserProfile {
+  id: string | number;
+  name: string;
+  email: string;
+  avatar?: string;
+  level?: string;
+  joinDate?: string;
+  streak?: number;
 }
 
 export interface BeTranscriptResponse {

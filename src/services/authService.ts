@@ -3,7 +3,7 @@
 //   - POST /api/auth/login (username/password)
 //   - POST /api/auth/google or /api/auth/google/callback (Google OAuth)
 
-import type { User } from '@/types';
+import type { User, BeUserProfile } from '@/types';
 import { BeAuthResponse } from '@/types';
 import { api, saveTokens, clearTokens } from '@/lib/api';
 import { config } from '@/lib/config';
@@ -77,27 +77,15 @@ export const authService = {
     if (!token) return null;
 
     try {
-      const profile = await api.get<{
-        id?: string | number;
-        username?: string;
-        fullName?: string;
-        name?: string;
-        email?: string;
-        avatar?: string;
-        picture?: string;
-        level?: string;
-        joinDate?: string;
-        createdAt?: string;
-        streak?: number;
-      }>('/api/users/me/profile');
+      const profile = await api.get<BeUserProfile>('/api/users/me/profile');
 
       return {
         id: String(profile.id ?? 'user-1'),
-        name: profile.fullName ?? profile.name ?? profile.username ?? profile.email ?? 'Studish Learner',
+        name: profile.name ?? profile.email ?? 'Studish Learner',
         email: profile.email ?? '',
-        avatar: profile.avatar ?? profile.picture,
+        avatar: profile.avatar,
         level: profile.level ?? 'B1',
-        joinDate: profile.joinDate ?? profile.createdAt?.split('T')[0] ?? new Date().toISOString().split('T')[0],
+        joinDate: profile.joinDate ?? new Date().toISOString().split('T')[0],
         streak: profile.streak ?? 1,
       };
     } catch {

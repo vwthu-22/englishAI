@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { Question } from '@/types';
 import { PublishedQuiz, useQuizStore } from './useQuizStore';
 import { questionService } from '@/services/questionService';
+import { useAuthStore } from './useAuthStore';
 
 type Step = 'input' | 'configure' | 'practice' | 'results';
 
@@ -25,6 +26,7 @@ interface ListeningState {
   score: number;
   expandedExplanation: string | null;
   isLoading: boolean;
+  exerciseId: number | null;  // ID from backend after generate
 
   setMode: (mode: 'ai' | 'search') => void;
   setSearchQuery: (query: string) => void;
@@ -71,6 +73,7 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
   score: 0,
   expandedExplanation: null,
   isLoading: false,
+  exerciseId: null,
 
   setMode: (mode) => set({ mode }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
@@ -123,14 +126,59 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
   },
 
   handleGenerate: async () => {
-    const { questionCount, selectedTypes, difficulty, audioUrl } = get();
+    const { questionCount, selectedTypes, difficulty, audioUrl, youtubeId, fileName } = get();
     set({ isLoading: true });
-    const generated = await questionService.generate({ count: questionCount, difficulty, types: selectedTypes, audioUrl });
-    set({ questions: generated, isLoading: false, step: 'practice' });
+    try {
+      const youtubeUrl = audioUrl || (youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : '');
+      const result = await questionService.generateListening({
+        title: fileName || `Listening Practice – ${difficulty}`,
+        youtubeUrl,
+        difficulty,
+        questionCount,
+        types: selectedTypes,
+      });
+      set({ questions: result.questions, exerciseId: result.exerciseId, isLoading: false, step: 'practice' });
+    } catch (err) {
+      console.error('Generate listening failed:', err);
+      set({ isLoading: false });
+    }
   },
 
-  handleSubmit: () => {
-    const { questions, answers, difficulty } = get();
+  handleSubmit: async () => {
+    const { questions, answers, difficulty, exerciseId } = get();
+
+    // 1. Try submitting to backend for official scoring
+    if (exerciseId) {
+      try {
+        // Build answers map: questionNumber (1-based) → answer
+        const beAnswers: Record<string, string> = {};
+        questions.forEach((q, idx) => {
+          beAnswers[String(idx + 1)] = answers[q.id] ?? '';
+        });
+        const result = await questionService.submitAnswers(exerciseId, beAnswers);
+        const calculatedScore = result.score;
+        const correct = result.correctCount;
+        set({ score: Math.round(calculatedScore), showResults: true, step: 'results' });
+
+        const now = new Date();
+        const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        useQuizStore.getState().addCompletedTest({
+          id: 'hist-' + Date.now(),
+          title: result.exerciseTitle || `Listening Practice (${difficulty})`,
+          type: 'listening',
+          score: Math.round(calculatedScore),
+          totalQuestions: result.totalQuestions,
+          correctAnswers: correct,
+          completedAt: formattedDate,
+          difficulty,
+        });
+        return;
+      } catch (err) {
+        console.warn('Submit to backend failed, falling back to local scoring:', err);
+      }
+    }
+
+    // 2. Fallback: local scoring
     let correct = 0;
     questions.forEach((q) => {
       const userAnswer = answers[q.id] || '';
@@ -155,7 +203,7 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
       totalQuestions: questions.length,
       correctAnswers: correct,
       completedAt: formattedDate,
-      difficulty: difficulty,
+      difficulty,
     });
   },
 
@@ -170,6 +218,7 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
       showResults: false,
       score: 0,
       isPublished: false,
+      exerciseId: null,
     });
   },
 
@@ -190,11 +239,13 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
   },
 
   handlePublish: async (addPublishedListeningQuiz, meta) => {
-    const { difficulty, audioUrl, youtubeId, questions } = get();
+    const { difficulty, audioUrl, youtubeId, questions, exerciseId } = get();
     set({ isPublishing: true });
-    await new Promise((r) => setTimeout(r, 1200));
+    const user = useAuthStore.getState().user;
+    const author = user?.name ?? 'You';
+    await new Promise((r) => setTimeout(r, 800));
     const quiz: PublishedQuiz = {
-      id: Date.now().toString(),
+      id: exerciseId ? String(exerciseId) : Date.now().toString(),
       title: meta?.title || `Listening Quiz – ${meta?.difficulty || difficulty}`,
       type: 'listening',
       topic: meta?.topic || 'General',
@@ -203,7 +254,7 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
       questions,
       difficulty: meta?.difficulty || difficulty,
       questionCount: questions.length,
-      author: 'You',
+      author,
       publishedAt: new Date().toLocaleDateString('vi-VN'),
       plays: 0,
       likes: 0,

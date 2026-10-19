@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { Question } from '@/types';
 import { PublishedQuiz, useQuizStore } from './useQuizStore';
 import { questionService } from '@/services/questionService';
+import { useAuthStore } from './useAuthStore';
 
 type Step = 'input' | 'configure' | 'practice' | 'results';
 
@@ -23,6 +24,7 @@ interface ReadingState {
   isLoading: boolean;
   inputMode: 'paste' | 'upload';
   fileName: string;
+  exerciseId: number | null;  // ID from backend after generate
 
   setMode: (mode: 'ai' | 'search') => void;
   setSearchQuery: (query: string) => void;
@@ -65,6 +67,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
   isLoading: false,
   inputMode: 'paste',
   fileName: '',
+  exerciseId: null,
 
   setMode: (mode) => set({ mode }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
@@ -106,14 +109,55 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
   },
 
   handleGenerate: async () => {
-    const { questionCount, selectedTypes, difficulty, passage } = get();
+    const { questionCount, selectedTypes, difficulty, passage, fileName } = get();
     set({ isLoading: true });
-    const generated = await questionService.generate({ count: questionCount, difficulty, types: selectedTypes, passage });
-    set({ questions: generated, isLoading: false, step: 'practice' });
+    try {
+      const result = await questionService.generateReading({
+        title: fileName || `Reading Practice – ${difficulty}`,
+        readingText: passage,
+        difficulty,
+        questionCount,
+        types: selectedTypes,
+      });
+      set({ questions: result.questions, exerciseId: result.exerciseId, isLoading: false, step: 'practice' });
+    } catch (err) {
+      console.error('Generate reading failed:', err);
+      set({ isLoading: false });
+    }
   },
 
-  handleSubmit: () => {
-    const { questions, answers, difficulty } = get();
+  handleSubmit: async () => {
+    const { questions, answers, difficulty, exerciseId } = get();
+
+    // 1. Try submitting to backend for official scoring
+    if (exerciseId) {
+      try {
+        const beAnswers: Record<string, string> = {};
+        questions.forEach((q, idx) => {
+          beAnswers[String(idx + 1)] = answers[q.id] ?? '';
+        });
+        const result = await questionService.submitAnswers(exerciseId, beAnswers);
+        set({ score: Math.round(result.score), step: 'results' });
+
+        const now = new Date();
+        const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        useQuizStore.getState().addCompletedTest({
+          id: 'hist-' + Date.now(),
+          title: result.exerciseTitle || `Reading Practice (${difficulty})`,
+          type: 'reading',
+          score: Math.round(result.score),
+          totalQuestions: result.totalQuestions,
+          correctAnswers: result.correctCount,
+          completedAt: formattedDate,
+          difficulty,
+        });
+        return;
+      } catch (err) {
+        console.warn('Submit to backend failed, falling back to local scoring:', err);
+      }
+    }
+
+    // 2. Fallback: local scoring
     let correct = 0;
     questions.forEach((q) => {
       const userAnswer = answers[q.id] || '';
@@ -126,10 +170,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       }
     });
     const calculatedScore = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
-    set({
-      score: calculatedScore,
-      step: 'results',
-    });
+    set({ score: calculatedScore, step: 'results' });
 
     const now = new Date();
     const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -141,7 +182,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       totalQuestions: questions.length,
       correctAnswers: correct,
       completedAt: formattedDate,
-      difficulty: difficulty,
+      difficulty,
     });
   },
 
@@ -154,6 +195,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       score: 0,
       fileName: '',
       isPublished: false,
+      exerciseId: null,
     });
   },
 
@@ -170,11 +212,13 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
   },
 
   handlePublish: async (addPublishedReadingQuiz, meta?: { title?: string; topic?: string; difficulty?: string }) => {
-    const { difficulty, passage, questions } = get();
+    const { difficulty, passage, questions, exerciseId } = get();
     set({ isPublishing: true });
-    await new Promise((r) => setTimeout(r, 1200));
+    const user = useAuthStore.getState().user;
+    const author = user?.name ?? 'You';
+    await new Promise((r) => setTimeout(r, 800));
     const quiz: PublishedQuiz = {
-      id: Date.now().toString(),
+      id: exerciseId ? String(exerciseId) : Date.now().toString(),
       title: meta?.title || `Reading Quiz – ${meta?.difficulty || difficulty}`,
       type: 'reading',
       topic: meta?.topic || 'General',
@@ -182,7 +226,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       questions,
       difficulty: meta?.difficulty || difficulty,
       questionCount: questions.length,
-      author: 'You',
+      author,
       publishedAt: new Date().toLocaleDateString('vi-VN'),
       plays: 0,
       likes: 0,
