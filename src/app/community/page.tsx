@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Headphones, BookOpen, Heart, Search,
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useQuizStore, PublishedQuiz } from '@/store/useQuizStore';
 import { defaultQuizzes } from '@/lib/mock/data';
+import { exerciseService } from '@/services/exerciseService';
 
 /* ─── Mock community quizzes seeded from defaultQuizzes ─── */
 const SEED_COMMUNITY: PublishedQuiz[] = defaultQuizzes.map((q, i) => ({
@@ -35,14 +36,40 @@ export default function CommunityPage() {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<PublishedQuiz | null>(null);
   const [saved, setSaved] = useState<Set<string>>(new Set());
+  const [beQuizzes, setBeQuizzes] = useState<PublishedQuiz[]>([]);
 
-  // Merge all quizzes: seed defaults + user-published
+  useEffect(() => {
+    exerciseService.search({ size: 50 })
+      .then((res) => {
+        if (res?.content && res.content.length > 0) {
+          const mapped: PublishedQuiz[] = res.content.map((item) => ({
+            id: String(item.id),
+            title: item.title,
+            type: item.type === 'LISTENING' ? 'listening' : 'reading',
+            topic: item.description || 'Community',
+            questions: [],
+            difficulty: item.difficulty,
+            questionCount: item.questionCount,
+            author: item.createdByUsername || 'Community Learner',
+            publishedAt: item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : 'Gần đây',
+            plays: 100 + (item.id % 50) * 12,
+            likes: 15 + (item.id % 20) * 3,
+            rating: 4.8,
+          }));
+          setBeQuizzes(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Merge all quizzes: backend community exercises + user-published + seed defaults
   const allQuizzes = useMemo<PublishedQuiz[]>(() => {
     const userPublished = [...publishedListeningQuizzes, ...publishedReadingQuizzes];
-    const ids = new Set(userPublished.map(q => q.id));
+    const combined = [...beQuizzes, ...userPublished];
+    const ids = new Set(combined.map(q => q.id));
     const seed = SEED_COMMUNITY.filter(q => !ids.has(q.id));
-    return [...userPublished, ...seed];
-  }, [publishedListeningQuizzes, publishedReadingQuizzes]);
+    return [...combined, ...seed];
+  }, [publishedListeningQuizzes, publishedReadingQuizzes, beQuizzes]);
 
   const filtered = useMemo(() => {
     let list = allQuizzes;

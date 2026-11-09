@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useUiStore } from '@/store/useUiStore';
 import { useBookmarkStore } from '@/store/useBookmarkStore';
 import { useQuizStore } from '@/store/useQuizStore';
+import { useExerciseStore } from '@/store/useExerciseStore';
 import LandingPage from './LandingPage';
 import Footer from './Footer';
 import { usePathname } from 'next/navigation';
@@ -26,6 +27,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const sidebarOpen = useUiStore((s) => s.sidebarOpen);
   const loadBookmarks = useBookmarkStore((s) => s.loadBookmarks);
   const loadPublishedQuizzes = useQuizStore((s) => s.loadPublishedQuizzes);
+  const fetchExercises = useExerciseStore((s) => s.fetchFromBackend);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -33,7 +35,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     restoreSession();
     loadBookmarks();
     loadPublishedQuizzes();
-  }, [restoreSession, loadBookmarks, loadPublishedQuizzes]);
+    fetchExercises();
+  }, [restoreSession, loadBookmarks, loadPublishedQuizzes, fetchExercises]);
 
   const pageInfo = pageTitles[pathname] || { title: 'EnglishAI', subtitle: '' };
 

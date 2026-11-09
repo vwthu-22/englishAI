@@ -5,6 +5,7 @@ import {
   X, ArrowLeft, Clock, RotateCcw
 } from 'lucide-react';
 import { useQuizStore, PublishedQuiz } from '@/store/useQuizStore';
+import { useExerciseStore } from '@/store/useExerciseStore';
 import { CompletedTest } from '@/types';
 import Link from 'next/link';
 
@@ -115,18 +116,42 @@ type FilterType = 'all' | 'listening' | 'reading';
 
 export default function MyTestsPage() {
   const { publishedListeningQuizzes, publishedReadingQuizzes, completedTests, likedIds, toggleLike } = useQuizStore();
+  const exercises = useExerciseStore((s) => s.exercises);
 
   const [mainTab, setMainTab] = useState<'posted' | 'history'>('posted');
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<FilterType>('all');
   const [selected, setSelected] = useState<PublishedQuiz | null>(null);
 
-  // Combine user-created published quizzes from store + seed quizzes
+  // Combine user-created published quizzes from store + backend exercises + seed quizzes
   const myTestsList = useMemo<PublishedQuiz[]>(() => {
     const userCreated = [...publishedListeningQuizzes, ...publishedReadingQuizzes];
-    if (userCreated.length > 0) return userCreated;
+    const beMapped: PublishedQuiz[] = exercises.map((ex) => ({
+      id: ex.id,
+      title: ex.title,
+      type: ex.type,
+      topic: ex.topic || 'General',
+      questions: [],
+      difficulty: ex.difficulty,
+      questionCount: ex.totalQuestions,
+      author: 'You',
+      publishedAt: ex.createdAt ? new Date(ex.createdAt).toLocaleDateString('vi-VN') : 'Gần đây',
+      plays: 0,
+      likes: 0,
+      rating: 5.0,
+    }));
+
+    const combined = [...beMapped, ...userCreated];
+    if (combined.length > 0) {
+      const seen = new Set<string>();
+      return combined.filter((q) => {
+        if (seen.has(q.id)) return false;
+        seen.add(q.id);
+        return true;
+      });
+    }
     return SEED_MY_TESTS;
-  }, [publishedListeningQuizzes, publishedReadingQuizzes]);
+  }, [publishedListeningQuizzes, publishedReadingQuizzes, exercises]);
 
   // Completed tests list
   const completedList = useMemo<CompletedTest[]>(() => {
