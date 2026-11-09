@@ -36,16 +36,33 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
 };
 
 export default function ProfilePage() {
-  const user = useAuthStore((s) => s.user);
+  const { user, updateUser } = useAuthStore();
   const exercises = useExerciseStore((s) => s.exercises);
   const weeklyData = useStatsStore((state) => state.weeklyData);
   const monthlyProgress = useStatsStore((state) => state.monthlyProgress);
 
   const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [editName, setEditName] = useState(user?.name || '');
   const [editLevel, setEditLevel] = useState(user?.level || 'B2');
 
+  React.useEffect(() => {
+    if (user?.name) setEditName(user.name);
+    if (user?.level) setEditLevel(user.level);
+  }, [user?.name, user?.level]);
+
   if (!user) return null;
+
+  const handleSave = async () => {
+    if (!editName.trim()) return;
+    setSaving(true);
+    try {
+      await updateUser({ name: editName.trim(), level: editLevel });
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const completed = exercises.filter(e => e.status === 'completed');
   const avgScore = completed.length > 0
@@ -110,10 +127,22 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <div className="flex gap-2 mt-1">
-                  <button className="flex items-center gap-1 px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl transition-all shadow-sm" onClick={() => setEditing(false)}>
-                    <Save size={12} /> Save
+                  <button
+                    disabled={saving}
+                    className="flex items-center gap-1 px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl transition-all shadow-sm disabled:opacity-50 cursor-pointer"
+                    onClick={handleSave}
+                  >
+                    <Save size={12} /> {saving ? 'Saving...' : 'Save'}
                   </button>
-                  <button className="flex items-center gap-1 px-4 py-1.5 text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all" onClick={() => setEditing(false)}>
+                  <button
+                    disabled={saving}
+                    className="flex items-center gap-1 px-4 py-1.5 text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all cursor-pointer"
+                    onClick={() => {
+                      setEditName(user.name);
+                      setEditLevel(user.level);
+                      setEditing(false);
+                    }}
+                  >
                     <X size={12} /> Cancel
                   </button>
                 </div>

@@ -30,6 +30,7 @@ interface AuthState {
   loginWithDirectToken: (accessToken: string, refreshToken?: string) => void;
   
   logout: () => Promise<void>;
+  updateUser: (data: Partial<User>) => Promise<void>;
   clearError: () => void;
   clearSuccessMessage: () => void;
   setError: (msg: string | null) => void;
@@ -103,6 +104,19 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     await authService.logout();
     set({ isLoggedIn: false, user: null, error: null, successMessage: null });
+  },
+
+  updateUser: async (data: Partial<User>) => {
+    try {
+      const updated = await authService.updateProfile(data);
+      set((state) => ({
+        user: state.user ? { ...state.user, ...updated } : updated,
+        successMessage: 'Cập nhật thông tin thành công!',
+      }));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update profile.';
+      set({ error: message });
+    }
   },
 
   clearError: () => set({ error: null }),

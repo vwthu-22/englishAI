@@ -10,6 +10,33 @@ import { config } from '@/lib/config';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+const PROFILE_STORAGE_KEY = 'studish_user_profile';
+
+export function getStoredProfile(): Partial<User> | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveStoredProfile(user: Partial<User>) {
+  if (typeof window === 'undefined') return;
+  try {
+    const existing = getStoredProfile() || {};
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ ...existing, ...user }));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function clearStoredProfile() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(PROFILE_STORAGE_KEY);
+}
+
 /**
  * Decode the JWT payload (base64) to extract basic user info.
  * Falls back gracefully if the token is malformed.
@@ -36,18 +63,75 @@ export function decodeJwtPayload(token: string): Record<string, unknown> {
   }
 }
 
-/** Build a minimal User from a decoded JWT payload */
+/** Build a User from token payload, optional BE user, and local stored profile */
+export function buildUser(token?: string, beUser?: BeAuthResponse['user']): User {
+  const payload = token ? decodeJwtPayload(token) : {};
+  const stored = getStoredProfile();
+
+  const id = String(
+    stored?.id ??
+    beUser?.id ??
+    payload.sub ??
+    payload.userId ??
+    payload.id ??
+    'user-1'
+  );
+
+  const name = String(
+    stored?.name ??
+    beUser?.name ??
+    beUser?.fullName ??
+    beUser?.username ??
+    payload.name ??
+    payload.fullName ??
+    payload.username ??
+    payload.email ??
+    beUser?.email ??
+    'Studish Learner'
+  );
+
+  const email = String(
+    stored?.email ??
+    beUser?.email ??
+    payload.email ??
+    ''
+  );
+
+  const avatar =
+    stored?.avatar ??
+    beUser?.avatar ??
+    beUser?.picture ??
+    (typeof payload.picture === 'string' ? payload.picture : typeof payload.avatar === 'string' ? payload.avatar : undefined);
+
+  const level = String(
+    stored?.level ??
+    beUser?.level ??
+    payload.level ??
+    'B1'
+  );
+
+  const joinDate = String(
+    stored?.joinDate ??
+    beUser?.joinDate ??
+    beUser?.createdAt?.split('T')[0] ??
+    payload.joinDate ??
+    new Date().toISOString().split('T')[0]
+  );
+
+  const streak = Number(
+    stored?.streak ??
+    beUser?.streak ??
+    payload.streak ??
+    1
+  );
+
+  const user: User = { id, name, email, avatar, level, joinDate, streak };
+  saveStoredProfile(user);
+  return user;
+}
+
 export function userFromToken(token: string): User {
-  const payload = decodeJwtPayload(token);
-  return {
-    id: String(payload.sub ?? payload.userId ?? payload.id ?? 'user-1'),
-    name: String(payload.name ?? payload.fullName ?? payload.username ?? payload.email ?? 'Studish Learner'),
-    email: String(payload.email ?? ''),
-    avatar: typeof payload.picture === 'string' ? payload.picture : typeof payload.avatar === 'string' ? payload.avatar : undefined,
-    level: String(payload.level ?? 'B1'),
-    joinDate: String(payload.joinDate ?? new Date().toISOString().split('T')[0]),
-    streak: Number(payload.streak ?? 1),
-  };
+  return buildUser(token);
 }
 
 // ─── Service ──────────────────────────────────────────────────────────────────
@@ -63,42 +147,77 @@ export const authService = {
       { public: true }
     );
     saveTokens(data.accessToken, data.refreshToken);
-    return userFromToken(data.accessToken);
+    return buildUser(data.accessToken, data.user);
   },
 
   /**
    * Fetch the currently logged-in user's profile from the backend.
    * Calls: GET /api/users/me/profile
-   * Falls back to JWT decode if the request fails.
+   * Falls back to stored profile / JWT decode if the request fails.
    */
   getMe: async (): Promise<User | null> => {
     if (typeof window === 'undefined') return null;
     const token = localStorage.getItem('access_token');
     if (!token) return null;
 
+    const stored = getStoredProfile();
+
     try {
       const profile = await api.get<BeUserProfile>('/api/users/me/profile');
 
-      return {
-        id: String(profile.id ?? 'user-1'),
-        name: profile.name ?? profile.email ?? 'Studish Learner',
-        email: profile.email ?? '',
-        avatar: profile.avatar,
-        level: profile.level ?? 'B1',
-        joinDate: profile.joinDate ?? new Date().toISOString().split('T')[0],
-        streak: profile.streak ?? 1,
+      const user: User = {
+        id: String(profile.id ?? stored?.id ?? 'user-1'),
+        name: profile.name ?? stored?.name ?? profile.email ?? 'Studish Learner',
+        email: profile.email ?? stored?.email ?? '',
+        avatar: profile.avatar ?? stored?.avatar,
+        level: profile.level ?? stored?.level ?? 'B1',
+        joinDate: profile.joinDate ?? stored?.joinDate ?? new Date().toISOString().split('T')[0],
+        streak: profile.streak ?? stored?.streak ?? 1,
       };
+
+      saveStoredProfile(user);
+      return user;
     } catch {
-      // API failed — fall back to decoding the stored token
-      return userFromToken(token);
+      // API failed — fall back to stored profile or decoding the token
+      return buildUser(token);
     }
   },
 
   /**
-   * Log out: clear tokens from localStorage.
+   * Update user profile (name, level, etc.)
+   */
+  updateProfile: async (data: Partial<User>): Promise<User> => {
+    saveStoredProfile(data);
+
+    try {
+      await api.put('/api/users/me/profile', data);
+    } catch {
+      try {
+        await api.patch('/api/users/me/profile', data);
+      } catch {
+        // Backend update endpoint might not be available yet; local storage preserves it
+      }
+    }
+
+    const current = getStoredProfile() || {};
+    return {
+      id: current.id || 'user-1',
+      name: current.name || 'Studish Learner',
+      email: current.email || '',
+      avatar: current.avatar,
+      level: current.level || 'B1',
+      joinDate: current.joinDate || new Date().toISOString().split('T')[0],
+      streak: current.streak || 1,
+      ...data,
+    } as User;
+  },
+
+  /**
+   * Log out: clear tokens & stored profile from localStorage.
    */
   logout: async (): Promise<void> => {
     clearTokens();
+    clearStoredProfile();
   },
 
   // ─── Google OAuth ──────────────────────────────────────────────────────────
@@ -151,7 +270,7 @@ export const authService = {
     );
     if (data && data.accessToken) {
       saveTokens(data.accessToken, data.refreshToken);
-      return userFromToken(data.accessToken);
+      return buildUser(data.accessToken, data.user);
     }
 
     throw new Error('Không nhận được token từ máy chủ.');
@@ -168,7 +287,7 @@ export const authService = {
     const data = await api.post<BeAuthResponse>(endpoint, { idToken }, { public: true });
     if (data && data.accessToken) {
       saveTokens(data.accessToken, data.refreshToken);
-      return userFromToken(data.accessToken);
+      return buildUser(data.accessToken, data.user);
     }
     throw new Error('Xác thực Google ID Token thất bại.');
   },
@@ -178,6 +297,6 @@ export const authService = {
    */
   loginWithDirectToken(accessToken: string, refreshToken?: string): User {
     saveTokens(accessToken, refreshToken);
-    return userFromToken(accessToken);
+    return buildUser(accessToken);
   },
 };

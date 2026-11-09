@@ -189,8 +189,21 @@ export interface BeTranscriptResponse {
 
 export interface BeAuthResponse {
   accessToken: string;
-  refreshToken: string;
-  tokenType: string;
+  refreshToken?: string;
+  tokenType?: string;
+  user?: {
+    id?: string | number;
+    name?: string;
+    fullName?: string;
+    username?: string;
+    email?: string;
+    avatar?: string;
+    picture?: string;
+    level?: string;
+    joinDate?: string;
+    createdAt?: string;
+    streak?: number;
+  };
 }
 
 export interface BeUserStats {
