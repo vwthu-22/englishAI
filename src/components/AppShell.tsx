@@ -20,6 +20,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
 };
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = React.useState(false);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
   const restoreSession = useAuthStore((s) => s.restoreSession);
   const sidebarOpen = useUiStore((s) => s.sidebarOpen);
@@ -28,11 +29,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
+    setMounted(true);
     restoreSession();
     loadBookmarks();
     loadPublishedQuizzes();
   }, [restoreSession, loadBookmarks, loadPublishedQuizzes]);
-
 
   const pageInfo = pageTitles[pathname] || { title: 'EnglishAI', subtitle: '' };
 
@@ -41,13 +42,39 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // If not logged in, always render landing page
-  if (!isLoggedIn) {
+  // If viewing about page, render landing page in full-screen mode
+  if (pathname === '/about') {
     return <LandingPage />;
   }
 
-  // If viewing about page, render landing page in full-screen mode
-  if (pathname === '/about') {
+  // Prevent flashing LandingPage when refreshing while logged in
+  const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('access_token');
+
+  if (!mounted) {
+    return (
+      <div 
+        style={{ 
+          minHeight: '100vh', 
+          background: 'var(--bg-primary, #f8fafc)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <div style={{
+          width: '32px',
+          height: '32px',
+          border: '3px solid rgba(108,99,255,0.2)',
+          borderTopColor: '#6c63ff',
+          borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite'
+        }} />
+      </div>
+    );
+  }
+
+  // If not logged in and no stored token, render landing page
+  if (!isLoggedIn && !hasLocalToken) {
     return <LandingPage />;
   }
 

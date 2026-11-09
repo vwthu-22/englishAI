@@ -1,12 +1,13 @@
 'use client';
 import { create } from 'zustand';
 import { User } from '@/types';
-import { authService } from '@/services/authService';
+import { authService, buildUser } from '@/services/authService';
 
 interface AuthState {
   user: User | null;
   isLoggedIn: boolean;
   isLoading: boolean;
+  isRestoring: boolean;
   error: string | null;
   successMessage: string | null;
 
@@ -39,12 +40,18 @@ interface AuthState {
   restoreSession: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isLoggedIn: false,
-  isLoading: false,
-  error: null,
-  successMessage: null,
+export const useAuthStore = create<AuthState>((set, get) => {
+  // Synchronously initialize auth state from localStorage if running in browser
+  const hasToken = typeof window !== 'undefined' ? !!localStorage.getItem('access_token') : false;
+  const initialUser = hasToken ? buildUser(localStorage.getItem('access_token') || undefined) : null;
+
+  return {
+    user: initialUser,
+    isLoggedIn: hasToken,
+    isLoading: false,
+    isRestoring: hasToken,
+    error: null,
+    successMessage: null,
 
   login: async (username, password) => {
     set({ isLoading: true, error: null, successMessage: null });
@@ -124,13 +131,20 @@ export const useAuthStore = create<AuthState>((set) => ({
   setError: (msg: string | null) => set({ error: msg }),
 
   restoreSession: async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (token && !get().isLoggedIn) {
+      set({ user: buildUser(token), isLoggedIn: true });
+    }
     try {
       const user = await authService.getMe();
       if (user) {
-        set({ user, isLoggedIn: true });
+        set({ user, isLoggedIn: true, isRestoring: false });
+      } else {
+        set({ isRestoring: false });
       }
     } catch {
-      // Ignore token restore failures
+      set({ isRestoring: false });
     }
   },
-}));
+};
+});
