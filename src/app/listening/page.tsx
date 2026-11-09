@@ -13,6 +13,12 @@ import { useQuizStore } from '@/store/useQuizStore';
 import SuggestedExercises from '@/components/SuggestedExercises';
 import { sampleAudios } from '@/lib/mock/data';
 
+const Youtube = ({ size = 20, className = '' }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+  </svg>
+);
+
 const DIFFICULTY_LEVELS = ['A2', 'B1', 'B2', 'C1', 'Easy', 'Medium', 'Hard'];
 const QUESTION_TYPES = [
   { id: 'multiple-choice', label: 'Multiple Choice', Icon: ListOrdered },
@@ -207,112 +213,105 @@ export default function ListeningPage() {
         <div className="w-full max-w-4xl mx-auto flex flex-col items-center py-2 animate-fade-in-up">
 
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-violet-50 border border-violet-100 flex items-center justify-center mx-auto mb-4 shadow-[0_4px_16px_rgba(108,99,255,0.15)]">
-              <Headphones size={30} className="text-violet-500" />
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/50 flex items-center justify-center mx-auto mb-4 shadow-[0_4px_16px_rgba(239,68,68,0.15)]">
+              <Youtube size={32} className="text-red-600" />
             </div>
-            <h1 className="text-xl font-bold text-gray-800 mb-1">Upload or link your audio</h1>
-            <p className="text-sm text-gray-400 max-w-sm">
-              EnglishAI will generate comprehension questions from your audio file.
+            <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-1">
+              AI Listening Practice with YouTube
+            </h1>
+            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto leading-relaxed">
+              Dán đường dẫn video YouTube tiếng Anh. Hệ thống AI sẽ tự động trích xuất transcript và tạo bộ câu hỏi luyện nghe cho bạn.
             </p>
           </div>
 
-          {/* Input Mode Tabs */}
-          <div className="w-full max-w-xl mb-4">
-            <div className="inline-flex bg-gray-100 rounded-xl p-1 mb-5">
-              <button
-                onClick={() => setInputMode('upload')}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  inputMode === 'upload' ? 'bg-white text-violet-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <Upload size={12} /> Upload File
-              </button>
-              <button
-                onClick={() => setInputMode('url')}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  inputMode === 'url' ? 'bg-white text-violet-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <LinkIcon size={12} /> Audio URL
-              </button>
+          {/* Main YouTube Input Card */}
+          <div className="w-full max-w-xl mb-6">
+            <div className="w-full bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-800 rounded-2xl p-5 shadow-[0_4px_24px_rgba(0,0,0,0.03)]">
+              <div className="flex items-center justify-between mb-2.5">
+                <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-300">
+                  <Youtube size={15} className="text-red-600" />
+                  <span>YouTube Video URL</span>
+                </label>
+                <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200/50">
+                  Auto-transcription
+                </span>
+              </div>
+
+              <div className="relative flex items-center gap-2">
+                <div className="flex-1 flex items-center gap-2.5 bg-gray-50 dark:bg-gray-800/60 border border-gray-200/70 dark:border-gray-700 rounded-xl px-3.5 py-2.5 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/10 transition-all">
+                  <LinkIcon size={15} className="text-gray-400 shrink-0" />
+                  <input
+                    className="flex-1 bg-transparent border-none outline-none text-xs text-gray-800 dark:text-gray-200 placeholder:text-gray-400"
+                    placeholder="https://www.youtube.com/watch?v=... hoặc https://youtu.be/..." 
+                    value={audioUrl}
+                    onChange={e => {
+                      setAudioUrl(e.target.value);
+                      if (error) useListeningStore.getState().setError(null);
+                    }}
+                    onKeyDown={e => e.key === 'Enter' && handleAudioSubmit()}
+                  />
+                </div>
+                <button
+                  onClick={handleAudioSubmit}
+                  disabled={!audioUrl.trim()}
+                  className="px-4 h-10 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm shadow-red-200 cursor-pointer"
+                >
+                  <span>Tiếp tục</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+
+              {/* Error if present */}
+              {error && (
+                <div className="mt-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                  <AlertCircle size={15} className="shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Supported format badges */}
+              <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800/80">
+                <span className="text-[10px] text-gray-400 font-medium">Hỗ trợ:</span>
+                <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 px-2 py-0.5 rounded-md">youtube.com/watch?v=ID</span>
+                <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 px-2 py-0.5 rounded-md">youtu.be/ID</span>
+                <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 px-2 py-0.5 rounded-md">youtube.com/embed/ID</span>
+              </div>
             </div>
-
-            {/* Upload tab */}
-            {inputMode === 'upload' && (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full border-2 border-dashed border-violet-200 hover:border-violet-400 bg-violet-50/40 hover:bg-violet-50/70 rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group"
-              >
-                <div className="w-14 h-14 rounded-xl bg-white border border-violet-100 shadow-sm flex items-center justify-center mb-4 group-hover:shadow-md transition-all">
-                  <Upload size={24} className="text-violet-400 group-hover:text-violet-600" />
-                </div>
-                <p className="text-sm font-semibold text-gray-700 mb-1">Click to upload audio</p>
-                <p className="text-xs text-gray-400">MP3, WAV, M4A, OGG — up to 100MB</p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="audio/*"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                />
-              </div>
-            )}
-
-            {/* URL tab */}
-            {inputMode === 'url' && (
-              <div className="w-full bg-white border border-gray-100 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-                <label className="block text-xs font-semibold text-gray-500 mb-2">Audio URL or YouTube link</label>
-                <div className="relative flex items-center gap-2">
-                  <div className="flex-1 flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
-                    <Music size={14} className="text-gray-400 shrink-0" />
-                    <input
-                      className="flex-1 bg-transparent border-none outline-none text-xs"
-                      style={{ color: 'var(--text-primary)' }}
-                      placeholder="Paste YouTube link or audio URL (.mp3, .wav...)" 
-                      value={audioUrl}
-                      onChange={e => setAudioUrl(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && handleAudioSubmit()}
-                    />
-                  </div>
-                  <button
-                    onClick={handleAudioSubmit}
-                    disabled={!audioUrl.trim()}
-                    className="w-9 h-9 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white flex items-center justify-center transition-all shadow-sm"
-                  >
-                    <ArrowRight size={15} />
-                  </button>
-                </div>
-                {/* Hint badges */}
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-[10px] font-medium text-gray-400 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full">youtube.com/watch?v=...</span>
-                  <span className="text-[10px] text-gray-300">or</span>
-                  <span className="text-[10px] font-medium text-gray-400 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full">https://....mp3</span>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Sample Audios */}
+          {/* Sample YouTube Videos */}
           <div className="w-full max-w-xl">
             <h3 className="text-[11px] font-bold uppercase tracking-wider mb-3 flex items-center gap-2 text-gray-400">
-              <span>Try a sample audio</span>
-              <div className="flex-1 h-px bg-gray-100" />
+              <Youtube size={13} className="text-red-500" />
+              <span>Hoặc chọn video YouTube mẫu có sẵn phụ đề</span>
+              <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {sampleAudios.map(ex => (
                 <div
                   key={ex.title}
-                  onClick={() => { setAudioUrl(ex.url); setFileName(ex.title); setInputMode('url'); }}
-                  className="card flex items-start gap-3 p-3.5 cursor-pointer hover:border-violet-200 hover:-translate-y-0.5 transition-all duration-300 bg-white border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.01)] rounded-2xl"
+                  onClick={() => {
+                    setAudioUrl(ex.url);
+                    setFileName(ex.title);
+                    const ytMatch = ex.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+                    if (ytMatch) {
+                      useListeningStore.getState().setYoutubeId(ytMatch[1]);
+                    }
+                    useListeningStore.getState().setError(null);
+                    setStep('configure');
+                  }}
+                  className="card flex items-start gap-3 p-3.5 cursor-pointer hover:border-red-200 dark:hover:border-red-900/60 hover:-translate-y-0.5 transition-all duration-300 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-[0_2px_10px_rgba(0,0,0,0.01)] rounded-2xl group"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center shrink-0 border border-violet-100/50">
-                    <Music size={18} className="text-violet-500" />
+                  <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/30 flex items-center justify-center shrink-0 border border-red-100/60 dark:border-red-900/40 group-hover:scale-105 transition-transform">
+                    <Youtube size={20} className="text-red-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-[11px] font-bold truncate mb-0.5 text-gray-700">{ex.title}</h4>
-                    <span className="text-[10px] font-semibold text-violet-600">+ Load sample</span>
-                    <div className="flex items-center justify-between text-[9px] mt-2 pt-1.5 border-t border-gray-50 text-gray-400">
+                    <h4 className="text-[11px] font-bold truncate mb-0.5 text-gray-700 dark:text-gray-200">{ex.title}</h4>
+                    <span className="text-[10px] font-semibold text-red-600 hover:underline">
+                      + Chọn video này
+                    </span>
+                    <div className="flex items-center justify-between text-[9px] mt-2 pt-1.5 border-t border-gray-50 dark:border-gray-800 text-gray-400">
                       <span>{ex.duration} • {ex.difficulty}</span>
                       <Headphones size={10} />
                     </div>
@@ -334,8 +333,9 @@ export default function ListeningPage() {
               </div>
               <div>
                 <h2 style={{ fontSize: '18px', fontWeight: 700 }}>Customize Exercise</h2>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                  🎵 {fileName || (audioUrl ? audioUrl.split('/').pop() : 'Audio file')}
+                <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5 mt-0.5 truncate max-w-md">
+                  <Youtube size={14} className="text-red-600 shrink-0" />
+                  <span className="truncate">{fileName || (youtubeId ? `YouTube (ID: ${youtubeId})` : audioUrl)}</span>
                 </p>
               </div>
             </div>
@@ -473,22 +473,13 @@ export default function ListeningPage() {
 
               {/* Audio / YouTube Player */}
               {youtubeId ? (
-                // YouTube: embed compact with only controls visible
-                <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px', background: '#000' }}>
+                <div className="w-full aspect-video rounded-xl overflow-hidden bg-black shadow-md border border-gray-200/50 dark:border-gray-800">
                   <iframe
-                    src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&controls=1`}
-                    style={{ width: '100%', height: '68px', border: 'none', display: 'block' }}
+                    src={`https://www.youtube.com/embed/${youtubeId}?rel=0`}
+                    className="w-full h-full border-none"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
-                  <div style={{
-                    position: 'absolute', top: 0, left: 0, right: 0,
-                    height: 'calc(100% - 40px)', // cover video, expose controls bar
-                    background: 'linear-gradient(135deg, rgba(108,99,255,0.85), rgba(139,92,246,0.85))',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none'
-                  }}>
-                    <Headphones size={28} color="rgba(255,255,255,0.9)" />
-                  </div>
                 </div>
               ) : audioUrl ? (
                 <audio

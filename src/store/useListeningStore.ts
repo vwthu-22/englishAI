@@ -125,9 +125,11 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
     // Auto-detect YouTube URL and extract video ID
     const ytMatch = audioUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
     if (ytMatch) {
-      set({ youtubeId: ytMatch[1], step: 'configure' });
+      set({ youtubeId: ytMatch[1], error: null, step: 'configure' });
     } else {
-      set({ youtubeId: '', step: 'configure' });
+      set({
+        error: 'Chức năng luyện nghe AI yêu cầu link video YouTube (ví dụ: https://www.youtube.com/watch?v=... hoặc https://youtu.be/...). File âm thanh mp3/wav chưa được backend hỗ trợ.',
+      });
     }
   },
 

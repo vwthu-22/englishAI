@@ -351,21 +351,21 @@ export interface SampleAudio {
 
 export const sampleAudios: SampleAudio[] = [
   {
-    title: 'IELTS Listening Practice Test 1',
-    duration: '30 mins',
+    title: 'TED Talk: The Power of Introverts',
+    duration: '19 mins',
     difficulty: 'B2',
-    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    url: 'https://www.youtube.com/watch?v=c0KYU2j0TM4',
   },
   {
-    title: 'BBC 6 Minute English – AI & Jobs',
-    duration: '6 mins',
+    title: 'Steve Jobs 2005 Stanford Speech',
+    duration: '15 mins',
     difficulty: 'B1',
-    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    url: 'https://www.youtube.com/watch?v=UF8uR6Z6KLc',
   },
   {
-    title: 'TED Talk Audio: Power of Introverts',
-    duration: '12 mins',
+    title: 'TED-Ed: How Languages Evolve',
+    duration: '5 mins',
     difficulty: 'C1',
-    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+    url: 'https://www.youtube.com/watch?v=iWDKsHm6gTA',
   },
 ];
