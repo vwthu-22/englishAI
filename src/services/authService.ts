@@ -3,7 +3,7 @@
 //   - POST /api/auth/login (username/password)
 //   - POST /api/auth/google or /api/auth/google/callback (Google OAuth)
 
-import type { User, BeUserProfile } from '@/types';
+import type { User, BeUserProfile, BeStreakResponse, BeStreakActivityResult } from '@/types';
 import { BeAuthResponse } from '@/types';
 import { api, saveTokens, clearTokens } from '@/lib/api';
 import { config } from '@/lib/config';
@@ -125,7 +125,14 @@ export function buildUser(token?: string, beUser?: BeAuthResponse['user']): User
     1
   );
 
-  const user: User = { id, name, email, avatar, level, joinDate, streak };
+  const maxStreak = Number(
+    stored?.maxStreak ??
+    beUser?.maxStreak ??
+    payload.maxStreak ??
+    streak
+  );
+
+  const user: User = { id, name, email, avatar, level, joinDate, streak, maxStreak };
   saveStoredProfile(user);
   return user;
 }
@@ -143,11 +150,53 @@ export const authService = {
   login: async (username: string, password: string): Promise<User> => {
     const data = await api.post<BeAuthResponse>(
       '/api/auth/login',
-      { username, password },
+      { usernameOrEmail: username, username, password },
       { public: true }
     );
     saveTokens(data.accessToken, data.refreshToken);
     return buildUser(data.accessToken, data.user);
+  },
+
+  /**
+   * Register a new user.
+   * Calls backend API: POST /api/auth/register
+   */
+  register: async (data: {
+    username?: string;
+    email: string;
+    password: string;
+    fullName?: string;
+  }): Promise<User> => {
+    const rawUsername = data.username || data.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '');
+    const username = rawUsername.length < 3 ? `${rawUsername}123` : rawUsername.slice(0, 50);
+    const res = await api.post<BeAuthResponse>(
+      '/api/auth/register',
+      {
+        username,
+        email: data.email,
+        password: data.password,
+        fullName: data.fullName || username,
+      },
+      { public: true }
+    );
+    saveTokens(res.accessToken, res.refreshToken);
+    return buildUser(res.accessToken, res.user);
+  },
+
+  /**
+   * Get current streak info.
+   * Calls: GET /api/users/me/streak
+   */
+  getStreak: async (): Promise<BeStreakResponse> => {
+    return api.get<BeStreakResponse>('/api/users/me/streak');
+  },
+
+  /**
+   * Record learning activity to increase streak.
+   * Calls: POST /api/users/me/streak/activity
+   */
+  recordStreakActivity: async (): Promise<BeStreakActivityResult> => {
+    return api.post<BeStreakActivityResult>('/api/users/me/streak/activity', {});
   },
 
   /**
@@ -173,6 +222,7 @@ export const authService = {
         level: profile.level ?? stored?.level ?? 'B1',
         joinDate: profile.joinDate ?? stored?.joinDate ?? new Date().toISOString().split('T')[0],
         streak: profile.streak ?? stored?.streak ?? 1,
+        maxStreak: profile.maxStreak ?? stored?.maxStreak ?? profile.streak ?? stored?.streak ?? 1,
       };
 
       saveStoredProfile(user);

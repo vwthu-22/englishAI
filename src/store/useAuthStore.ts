@@ -13,7 +13,15 @@ interface AuthState {
 
   /** Email/password login → calls POST /api/auth/login */
   login: (username: string, password: string) => Promise<void>;
-  
+
+  /** Register new account → calls POST /api/auth/register */
+  register: (data: {
+    username?: string;
+    email: string;
+    password: string;
+    fullName?: string;
+  }) => Promise<void>;
+
   /** Triggers Google OAuth redirect — browser navigates away */
   loginWithGoogle: (customClientId?: string, customRedirectUri?: string) => void;
   
@@ -32,6 +40,7 @@ interface AuthState {
   
   logout: () => Promise<void>;
   updateUser: (data: Partial<User>) => Promise<void>;
+  updateUserLocal: (data: Partial<User>) => void;
   clearError: () => void;
   clearSuccessMessage: () => void;
   setError: (msg: string | null) => void;
@@ -60,6 +69,17 @@ export const useAuthStore = create<AuthState>((set, get) => {
       set({ user, isLoggedIn: true, isLoading: false, successMessage: `Welcome back, ${user.name}!` });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed.';
+      set({ isLoading: false, error: message, isLoggedIn: false });
+    }
+  },
+
+  register: async (data) => {
+    set({ isLoading: true, error: null, successMessage: null });
+    try {
+      const user = await authService.register(data);
+      set({ user, isLoggedIn: true, isLoading: false, successMessage: `Chào mừng ${user.name} đến với Studish!` });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Đăng ký thất bại.';
       set({ isLoading: false, error: message, isLoggedIn: false });
     }
   },
@@ -126,6 +146,15 @@ export const useAuthStore = create<AuthState>((set, get) => {
     }
   },
 
+  updateUserLocal: (data: Partial<User>) => {
+    set((state) => {
+      if (!state.user) return state;
+      const updated = { ...state.user, ...data };
+      authService.updateProfile(updated).catch(() => {});
+      return { user: updated };
+    });
+  },
+
   clearError: () => set({ error: null }),
   clearSuccessMessage: () => set({ successMessage: null }),
   setError: (msg: string | null) => set({ error: msg }),
@@ -138,6 +167,15 @@ export const useAuthStore = create<AuthState>((set, get) => {
     try {
       const user = await authService.getMe();
       if (user) {
+        try {
+          const streakInfo = await authService.getStreak();
+          if (streakInfo) {
+            user.streak = streakInfo.currentStreak;
+            user.maxStreak = streakInfo.maxStreak;
+          }
+        } catch {
+          // ignore streak error
+        }
         set({ user, isLoggedIn: true, isRestoring: false });
       } else {
         set({ isRestoring: false });

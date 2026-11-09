@@ -144,6 +144,22 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
         const result = await questionService.submitAnswers(exerciseId, beAnswers);
         set({ score: Math.round(result.score), step: 'results' });
 
+        // Record streak activity after successful submission
+        try {
+          const streakInfo = await (await import('@/services/authService')).authService.recordStreakActivity();
+          if (streakInfo) {
+            const authStore = useAuthStore.getState();
+            if (authStore.user) {
+              authStore.updateUserLocal({
+                streak: streakInfo.currentStreak,
+                maxStreak: streakInfo.maxStreak,
+              });
+            }
+          }
+        } catch {
+          // ignore streak errors
+        }
+
         const now = new Date();
         const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
         useQuizStore.getState().addCompletedTest({

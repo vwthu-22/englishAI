@@ -50,6 +50,7 @@ export default function LoginPage() {
 
   const {
     login,
+    register,
     loginWithGoogle,
     isLoading,
     error,
@@ -59,7 +60,15 @@ export default function LoginPage() {
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(email, password);
+    if (mode === 'register') {
+      await register({
+        email,
+        password,
+        fullName: name,
+      });
+    } else {
+      await login(email, password);
+    }
     const { isLoggedIn } = useAuthStore.getState();
     if (isLoggedIn) {
       router.push('/');

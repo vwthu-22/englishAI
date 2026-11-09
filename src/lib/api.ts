@@ -58,6 +58,40 @@ export function clearTokens() {
   localStorage.removeItem('refresh_token');
 }
 
+/**
+ * Refresh access token using POST /api/auth/refresh
+ */
+export async function refreshAccessToken(): Promise<string | null> {
+  if (typeof window === 'undefined') return null;
+  const refreshToken = localStorage.getItem('refresh_token');
+  if (!refreshToken) return null;
+
+  try {
+    const res = await fetch(`${config.apiBaseUrl}/api/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${refreshToken}`,
+      },
+    });
+
+    if (!res.ok) {
+      clearTokens();
+      return null;
+    }
+
+    const json = await res.json();
+    const data = json?.data;
+    if (data?.accessToken) {
+      saveTokens(data.accessToken, data.refreshToken || refreshToken);
+      return data.accessToken;
+    }
+  } catch {
+    // network or parsing failure
+  }
+  return null;
+}
+
 // ─── Core fetch ───────────────────────────────────────────────────────────────
 
 type RequestOptions = Omit<RequestInit, 'body'> & {
@@ -101,6 +135,23 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   }));
 
   if (!response.ok) {
+    // If 401 and we have a refresh token, try refreshing once
+    if (response.status === 401 && !isPublic && !path.includes('/api/auth/')) {
+      const newToken = await refreshAccessToken();
+      if (newToken) {
+        (headers as Record<string, string>)['Authorization'] = `Bearer ${newToken}`;
+        const retryRes = await fetch(`${config.apiBaseUrl}${path}`, {
+          ...init,
+          headers,
+          body: body !== undefined ? JSON.stringify(body) : undefined,
+        });
+        if (retryRes.ok) {
+          const retryJson: ApiResponse<T> = await retryRes.json();
+          return retryJson.data;
+        }
+      }
+    }
+
     // Translate known backend / OpenAI error codes into user-friendly messages
     const rawMessage: string = json.message ?? '';
     let friendlyMessage = rawMessage || 'An unexpected error occurred.';

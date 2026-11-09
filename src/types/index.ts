@@ -10,6 +10,7 @@ export interface User {
   level: string;
   joinDate: string;
   streak: number;
+  maxStreak?: number;
 }
 
 export interface Exercise {
@@ -194,6 +195,22 @@ export interface BeUserProfile {
   level?: string;
   joinDate?: string;
   streak?: number;
+  maxStreak?: number;
+}
+
+export interface BeStreakResponse {
+  currentStreak: number;
+  maxStreak: number;
+  lastActivityDate?: string;
+  activeToday: boolean;
+  freezesRemaining?: number;
+}
+
+export interface BeStreakActivityResult {
+  currentStreak: number;
+  maxStreak: number;
+  streakIncreased: boolean;
+  message?: string;
 }
 
 export interface BeTranscriptResponse {
@@ -218,6 +235,7 @@ export interface BeAuthResponse {
     joinDate?: string;
     createdAt?: string;
     streak?: number;
+    maxStreak?: number;
   };
 }
 

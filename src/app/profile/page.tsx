@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Mail, Calendar, Trophy, Flame, BookOpen, Headphones,
   Target, Edit3, Save, X, Camera, TrendingUp, Award,
@@ -8,6 +8,7 @@ import {
 import { useAuthStore } from '@/store/useAuthStore';
 import { useExerciseStore } from '@/store/useExerciseStore';
 import { useStatsStore } from '@/store/useStatsStore';
+import { statsService } from '@/services/statsService';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer
@@ -45,6 +46,15 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [editName, setEditName] = useState(user?.name || '');
   const [editLevel, setEditLevel] = useState(user?.level || 'B2');
+  const [beStats, setBeStats] = useState<{
+    totalExercises: number;
+    averageScore: number;
+    correctRate: number;
+  } | null>(null);
+
+  useEffect(() => {
+    statsService.getStats().then((s) => setBeStats(s)).catch(() => {});
+  }, []);
 
   React.useEffect(() => {
     if (user?.name) setEditName(user.name);
@@ -73,10 +83,16 @@ export default function ProfilePage() {
   const bestScore = completed.length > 0 ? Math.max(...completed.map(e => e.score || 0)) : 0;
   const currentLevelIdx = CEFR_LEVELS.indexOf(editLevel);
 
+  // Use BE stats when available, fall back to local store data
+  const totalExercises = beStats?.totalExercises ?? exercises.length;
+  const displayAvgScore = beStats?.averageScore != null
+    ? Math.round(beStats.averageScore)
+    : avgScore;
+
   const stats = [
-    { label: 'Total Exercises', value: exercises.length, icon: BookOpen, color: 'purple', change: '+3 this week' },
-    { label: 'Average Score', value: `${avgScore}%`, icon: Target, color: 'green', change: '+5% vs last month' },
-    { label: 'Current Streak', value: `${user?.streak || 0} days`, icon: Flame, color: 'orange', change: 'Personal best!' },
+    { label: 'Total Exercises', value: totalExercises, icon: BookOpen, color: 'purple', change: '+3 this week' },
+    { label: 'Average Score', value: `${displayAvgScore}%`, icon: Target, color: 'green', change: beStats ? `${Math.round(beStats.correctRate)}% correct` : '+5% vs last month' },
+    { label: 'Current Streak', value: `${user?.streak || 0} days`, icon: Flame, color: 'orange', change: user?.maxStreak ? `Best: ${user.maxStreak} days` : 'Personal best!' },
     { label: 'Study Time', value: '28h', icon: Clock, color: 'blue', change: 'This month' },
   ];
 
