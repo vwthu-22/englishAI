@@ -22,6 +22,7 @@ interface ReadingState {
   score: number;
   expandedExplanation: string | null;
   isLoading: boolean;
+  error: string | null;
   inputMode: 'paste' | 'upload';
   fileName: string;
   exerciseId: number | null;  // ID from backend after generate
@@ -39,6 +40,7 @@ interface ReadingState {
   setInputMode: (mode: 'paste' | 'upload') => void;
   setFileName: (fileName: string) => void;
   setExpandedExplanation: (id: string | null) => void;
+  setError: (error: string | null) => void;
 
   toggleType: (type: string) => void;
   handleAnswer: (questionId: string, answer: string) => void;
@@ -65,6 +67,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
   score: 0,
   expandedExplanation: null,
   isLoading: false,
+  error: null,
   inputMode: 'paste',
   fileName: '',
   exerciseId: null,
@@ -82,6 +85,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
   setInputMode: (inputMode) => set({ inputMode }),
   setFileName: (fileName) => set({ fileName }),
   setExpandedExplanation: (expandedExplanation) => set({ expandedExplanation }),
+  setError: (error) => set({ error }),
 
   toggleType: (type) => {
     const { selectedTypes } = get();
@@ -110,31 +114,32 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
 
   handleGenerate: async () => {
     const { questionCount, selectedTypes, difficulty, passage, fileName } = get();
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const result = await questionService.generateReading({
         title: fileName || `Reading Practice – ${difficulty}`,
         readingText: passage,
         difficulty,
-        questionCount,
+        questionCount: Math.min(20, Math.max(5, questionCount)),
         types: selectedTypes,
       });
-      set({ questions: result.questions, exerciseId: result.exerciseId, isLoading: false, step: 'practice' });
-    } catch (err) {
+      set({ questions: result.questions, exerciseId: result.exerciseId, isLoading: false, error: null, step: 'practice' });
+    } catch (err: unknown) {
       console.error('Generate reading failed:', err);
-      set({ isLoading: false });
+      const message = err instanceof Error ? err.message : 'Có lỗi xảy ra khi tạo bài tập reading.';
+      set({ isLoading: false, error: message });
     }
   },
 
   handleSubmit: async () => {
     const { questions, answers, difficulty, exerciseId } = get();
 
-    // 1. Try submitting to backend for official scoring
+    // 1. Submit to backend — answers keyed by questionNumber (from BE)
     if (exerciseId) {
       try {
         const beAnswers: Record<string, string> = {};
-        questions.forEach((q, idx) => {
-          beAnswers[String(idx + 1)] = answers[q.id] ?? '';
+        questions.forEach((q) => {
+          beAnswers[String(q.questionNumber)] = answers[q.id] ?? '';
         });
         const result = await questionService.submitAnswers(exerciseId, beAnswers);
         set({ score: Math.round(result.score), step: 'results' });
@@ -195,6 +200,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       score: 0,
       fileName: '',
       isPublished: false,
+      error: null,
       exerciseId: null,
     });
   },

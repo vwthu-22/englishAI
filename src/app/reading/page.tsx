@@ -29,7 +29,7 @@ export default function ReadingPage() {
   const {
     mode, searchQuery, isPublished, isPublishing, step,
     passage, questionCount, difficulty, selectedTypes,
-    questions, answers, score, expandedExplanation, isLoading,
+    questions, answers, score, expandedExplanation, isLoading, error,
     inputMode, fileName,
     setMode, setSearchQuery, setPassage, setQuestionCount,
     setDifficulty, setStep, setInputMode, setExpandedExplanation,
@@ -440,6 +440,13 @@ export default function ReadingPage() {
                 ))}
               </div>
             </div>
+
+            {error && (
+              <div className="p-3 mb-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                <AlertCircle size={15} className="shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '10px' }}>
               <button className="btn-secondary" onClick={() => setStep('input')} style={{ flex: 1 }}>Back</button>

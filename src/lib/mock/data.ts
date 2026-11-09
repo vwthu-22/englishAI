@@ -169,7 +169,7 @@ export const defaultQuizzes: QuizItem[] = [
 // Placeholder questions — replace with AI-generated content from backend
 export const mockQuestions: Question[] = [
   {
-    id: '1',
+    id: '1', questionNumber: 1,
     type: 'multiple-choice',
     question: 'What is the main theme discussed in the passage?',
     options: [
@@ -183,7 +183,7 @@ export const mockQuestions: Question[] = [
       'The passage primarily discusses how introverts, despite societal preferences for extroversion, contribute significantly to society through deep thinking and creativity.',
   },
   {
-    id: '2',
+    id: '2', questionNumber: 2,
     type: 'true-false',
     question: 'The author suggests that introversion is a weakness that needs to be overcome.',
     options: ['True', 'False'],
@@ -192,14 +192,14 @@ export const mockQuestions: Question[] = [
       'The author argues the opposite — that introversion is a strength, and society should value the unique contributions of introverts.',
   },
   {
-    id: '3',
+    id: '3', questionNumber: 3,
     type: 'gap-fill',
     question: 'Introverts often prefer working in _______ environments where they can focus deeply.',
     answer: 'quiet',
     explanation: 'The text explicitly states that introverts thrive in quiet environments.',
   },
   {
-    id: '4',
+    id: '4', questionNumber: 4,
     type: 'multiple-choice',
     question: 'According to the passage, what percentage of people are introverts?',
     options: ['One-quarter', 'One-third', 'One-half', 'Two-thirds'],
@@ -207,14 +207,14 @@ export const mockQuestions: Question[] = [
     explanation: 'The author states that approximately one-third to one-half of the population are introverts.',
   },
   {
-    id: '5',
+    id: '5', questionNumber: 5,
     type: 'short-answer',
     question: 'Name TWO famous introverts mentioned in the passage and their contributions.',
     answer: 'Albert Einstein (physicist) and Rosa Parks (civil rights activist)',
     explanation: 'The passage cites Einstein and Rosa Parks as examples of introverts who changed the world.',
   },
   {
-    id: '6',
+    id: '6', questionNumber: 6,
     type: 'multiple-choice',
     question: 'What does the author recommend for schools?',
     options: [
@@ -227,7 +227,7 @@ export const mockQuestions: Question[] = [
     explanation: 'The author advocates for educational environments that accommodate both collaborative and individual learning styles.',
   },
   {
-    id: '7',
+    id: '7', questionNumber: 7,
     type: 'true-false',
     question: 'The passage implies that modern workplaces are well-designed for introverts.',
     options: ['True', 'False'],
@@ -235,14 +235,14 @@ export const mockQuestions: Question[] = [
     explanation: 'The author criticizes open-plan offices as unsuitable for introverts.',
   },
   {
-    id: '8',
+    id: '8', questionNumber: 8,
     type: 'gap-fill',
     question: 'The author calls for a _______ revolution in how we think about introversion.',
     answer: 'quiet',
     explanation: "This references the book 'Quiet' by Susan Cain.",
   },
   {
-    id: '9',
+    id: '9', questionNumber: 9,
     type: 'multiple-choice',
     question: "Which of the following best describes the author's tone?",
     options: ['Neutral and objective', 'Persuasive and passionate', 'Humorous and light-hearted', 'Pessimistic and critical'],
@@ -250,7 +250,7 @@ export const mockQuestions: Question[] = [
     explanation: 'The author uses persuasive language and shows clear passion for the topic.',
   },
   {
-    id: '10',
+    id: '10', questionNumber: 10,
     type: 'matching',
     question: 'Match each term with its correct definition: Introversion, Ambiversion, Extroversion',
     options: [

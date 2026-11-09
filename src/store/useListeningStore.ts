@@ -15,6 +15,7 @@ interface ListeningState {
   step: Step;
   audioUrl: string;
   youtubeId: string;   // populated when URL is a YouTube link
+  transcript: string;  // extracted transcript from BE (content field)
   inputMode: 'url' | 'upload';
   fileName: string;
   questionCount: number;
@@ -26,6 +27,7 @@ interface ListeningState {
   score: number;
   expandedExplanation: string | null;
   isLoading: boolean;
+  error: string | null;
   exerciseId: number | null;  // ID from backend after generate
 
   setMode: (mode: 'ai' | 'search') => void;
@@ -42,6 +44,7 @@ interface ListeningState {
   setStep: (step: Step) => void;
   setIsPublished: (isPublished: boolean) => void;
   setExpandedExplanation: (id: string | null) => void;
+  setError: (error: string | null) => void;
 
   toggleType: (type: string) => void;
   handleAnswer: (questionId: string, answer: string) => void;
@@ -62,6 +65,7 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
   step: 'input',
   audioUrl: '',
   youtubeId: '',
+  transcript: '',
   inputMode: 'url',
   fileName: '',
   questionCount: 10,
@@ -73,6 +77,7 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
   score: 0,
   expandedExplanation: null,
   isLoading: false,
+  error: null,
   exerciseId: null,
 
   setMode: (mode) => set({ mode }),
@@ -89,6 +94,7 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
   setStep: (step) => set({ step }),
   setIsPublished: (isPublished) => set({ isPublished }),
   setExpandedExplanation: (expandedExplanation) => set({ expandedExplanation }),
+  setError: (error) => set({ error }),
 
   toggleType: (type) => {
     const { selectedTypes } = get();
@@ -127,38 +133,44 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
 
   handleGenerate: async () => {
     const { questionCount, selectedTypes, difficulty, audioUrl, youtubeId, fileName } = get();
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const youtubeUrl = audioUrl || (youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : '');
       const result = await questionService.generateListening({
         title: fileName || `Listening Practice – ${difficulty}`,
         youtubeUrl,
         difficulty,
-        questionCount,
+        questionCount: Math.min(20, Math.max(5, questionCount)),
         types: selectedTypes,
       });
-      set({ questions: result.questions, exerciseId: result.exerciseId, isLoading: false, step: 'practice' });
-    } catch (err) {
+      set({
+        questions: result.questions,
+        exerciseId: result.exerciseId,
+        transcript: result.transcript,
+        isLoading: false,
+        error: null,
+        step: 'practice',
+      });
+    } catch (err: unknown) {
       console.error('Generate listening failed:', err);
-      set({ isLoading: false });
+      const message = err instanceof Error ? err.message : 'Có lỗi xảy ra khi tạo bài tập listening.';
+      set({ isLoading: false, error: message });
     }
   },
 
   handleSubmit: async () => {
     const { questions, answers, difficulty, exerciseId } = get();
 
-    // 1. Try submitting to backend for official scoring
+    // 1. Submit to backend — answers keyed by questionNumber (from BE)
     if (exerciseId) {
       try {
-        // Build answers map: questionNumber (1-based) → answer
         const beAnswers: Record<string, string> = {};
-        questions.forEach((q, idx) => {
-          beAnswers[String(idx + 1)] = answers[q.id] ?? '';
+        questions.forEach((q) => {
+          // q.questionNumber is the 1-based key the BE expects
+          beAnswers[String(q.questionNumber)] = answers[q.id] ?? '';
         });
         const result = await questionService.submitAnswers(exerciseId, beAnswers);
-        const calculatedScore = result.score;
-        const correct = result.correctCount;
-        set({ score: Math.round(calculatedScore), showResults: true, step: 'results' });
+        set({ score: Math.round(result.score), showResults: true, step: 'results' });
 
         const now = new Date();
         const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -166,9 +178,9 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
           id: 'hist-' + Date.now(),
           title: result.exerciseTitle || `Listening Practice (${difficulty})`,
           type: 'listening',
-          score: Math.round(calculatedScore),
+          score: Math.round(result.score),
           totalQuestions: result.totalQuestions,
-          correctAnswers: correct,
+          correctAnswers: result.correctCount,
           completedAt: formattedDate,
           difficulty,
         });
@@ -212,12 +224,14 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
       step: 'input',
       audioUrl: '',
       youtubeId: '',
+      transcript: '',
       fileName: '',
       questions: [],
       answers: {},
       showResults: false,
       score: 0,
       isPublished: false,
+      error: null,
       exerciseId: null,
     });
   },

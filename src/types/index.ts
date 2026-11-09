@@ -28,11 +28,15 @@ export interface Exercise {
 
 export interface Question {
   id: string;
+  /** 1-based question number from backend — used as key when submitting answers */
+  questionNumber: number;
   type: 'multiple-choice' | 'gap-fill' | 'true-false' | 'matching' | 'short-answer';
   question: string;
   options?: string[];
   answer: string | string[];
   explanation: string;
+  /** MM:SS for listening questions */
+  audioTimestamp?: string;
   userAnswer?: string | string[];
 }
 
@@ -90,6 +94,17 @@ export function toBeDefficulty(d: string): BeDifficulty {
     a2b1: 'EASY', b1b2: 'MEDIUM', b2c1: 'HARD',
   };
   return map[d.toLowerCase()] ?? 'MEDIUM';
+}
+
+/** Maps FE difficulty / CEFR string → BE CefrLevel enum (optional field for exercises) */
+export function toBeCefrLevel(d: string): BeCefrLevel | undefined {
+  const map: Record<string, BeCefrLevel> = {
+    a2: 'A2', a2b1: 'A2B1', b1: 'B1', b1b2: 'B1B2',
+    b2: 'B2', b2c1: 'B2C1', c1: 'C1',
+    // difficulty fallbacks
+    easy: 'A2', medium: 'B1', hard: 'C1',
+  };
+  return map[d.toLowerCase()];
 }
 
 /** Maps FE selectedTypes string → BE QuestionType enum */
@@ -219,6 +234,7 @@ export interface BeUserStats {
 export function mapBeQuestion(q: BeQuestionResponse): Question {
   return {
     id: String(q.id),
+    questionNumber: q.questionNumber,
     type: (() => {
       const m: Record<BeQuestionType, Question['type']> = {
         MULTIPLE_CHOICE: 'multiple-choice',
@@ -230,9 +246,11 @@ export function mapBeQuestion(q: BeQuestionResponse): Question {
       return m[q.questionType] ?? 'multiple-choice';
     })(),
     question: q.questionText,
+    // Split pipe-delimited string "A. Opt1|||B. Opt2" → string[]
     options: q.options ? q.options.split('|||') : undefined,
     answer: q.correctAnswer,
     explanation: q.explanation,
+    audioTimestamp: q.audioTimestamp,
   };
 }
 

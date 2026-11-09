@@ -5,7 +5,7 @@ import {
   ChevronDown, ChevronRight, Lightbulb, RefreshCw,
   Headphones, Sparkles, ArrowRight, Upload, Link2 as LinkIcon,
   Search, Share2, Bookmark, BookOpen, Users, Star, Clock,
-  ListOrdered, FileText, CheckSquare, Link2, Edit3
+  ListOrdered, FileText, CheckSquare, Link2, Edit3, AlertCircle
 } from 'lucide-react';
 import { useListeningStore } from '@/store/useListeningStore';
 import { useBookmarkStore } from '@/store/useBookmarkStore';
@@ -29,8 +29,8 @@ export default function ListeningPage() {
 
   const {
     mode, searchQuery, isPublished, isPublishing, step,
-    audioUrl, youtubeId, inputMode, fileName, questionCount, difficulty, selectedTypes,
-    questions, answers, score, expandedExplanation, isLoading,
+    audioUrl, youtubeId, transcript, inputMode, fileName, questionCount, difficulty, selectedTypes,
+    questions, answers, score, expandedExplanation, isLoading, error,
     setMode, setSearchQuery, setAudioUrl, setInputMode, setFileName,
     setQuestionCount, setDifficulty,
     setStep, setExpandedExplanation,
@@ -38,6 +38,8 @@ export default function ListeningPage() {
     handleGenerate, handleSubmit, handleReset,
     handleTakePublished, handlePublish: storeHandlePublish
   } = useListeningStore();
+
+  const [showTranscript, setShowTranscript] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -405,6 +407,13 @@ export default function ListeningPage() {
               </div>
             </div>
 
+            {error && (
+              <div className="p-3 mb-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                <AlertCircle size={15} className="shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: '10px' }}>
               <button className="btn-secondary" onClick={() => setStep('input')} style={{ flex: 1 }}>Back</button>
               <button className="btn-primary" onClick={handleGenerate} disabled={selectedTypes.length === 0 || isLoading}
@@ -482,6 +491,27 @@ export default function ListeningPage() {
                   textAlign: 'center', fontSize: '13px', color: 'var(--text-muted)'
                 }}>
                   No audio source — questions are still available below
+                </div>
+              )}
+
+              {/* Transcript accordion if available */}
+              {transcript && (
+                <div className="w-full mt-2 rounded-xl border border-gray-200/60 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 overflow-hidden">
+                  <button
+                    onClick={() => setShowTranscript(!showTranscript)}
+                    className="w-full px-4 py-2.5 flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50/60 dark:hover:bg-gray-800/40 transition-colors"
+                  >
+                    <span className="flex items-center gap-2">
+                      <FileText size={14} className="text-indigo-500" />
+                      <span>Video Transcript</span>
+                    </span>
+                    <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${showTranscript ? 'rotate-180' : ''}`} />
+                  </button>
+                  {showTranscript && (
+                    <div className="px-4 py-3 text-xs leading-relaxed text-gray-600 dark:text-gray-300 border-t border-gray-100 dark:border-gray-800/60 max-h-56 overflow-y-auto whitespace-pre-wrap">
+                      {transcript}
+                    </div>
+                  )}
                 </div>
               )}
 
