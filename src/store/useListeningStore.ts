@@ -133,9 +133,27 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
 
   handleGenerate: async () => {
     const { questionCount, selectedTypes, difficulty, audioUrl, youtubeId, fileName } = get();
+
+    // AI generation requires a YouTube URL — build it from youtubeId (extracted on submit)
+    // or validate that audioUrl itself is a YouTube link.
+    const ytIdFromUrl = audioUrl.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/
+    )?.[1];
+    const resolvedYoutubeId = youtubeId || ytIdFromUrl || '';
+    const youtubeUrl = resolvedYoutubeId
+      ? `https://www.youtube.com/watch?v=${resolvedYoutubeId}`
+      : '';
+
+    if (!youtubeUrl) {
+      set({
+        isLoading: false,
+        error: 'AI generation requires a YouTube URL. Please paste a valid YouTube link (e.g. https://www.youtube.com/watch?v=...).',
+      });
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
-      const youtubeUrl = audioUrl || (youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : '');
       const result = await questionService.generateListening({
         title: fileName || `Listening Practice – ${difficulty}`,
         youtubeUrl,
@@ -153,7 +171,8 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
       });
     } catch (err: unknown) {
       console.error('Generate listening failed:', err);
-      const message = err instanceof Error ? err.message : 'Có lỗi xảy ra khi tạo bài tập listening.';
+      const message =
+        err instanceof Error ? err.message : 'Có lỗi xảy ra khi tạo bài tập listening.';
       set({ isLoading: false, error: message });
     }
   },

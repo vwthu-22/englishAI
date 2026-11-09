@@ -39,6 +39,9 @@ export default function ListeningPage() {
     handleTakePublished, handlePublish: storeHandlePublish
   } = useListeningStore();
 
+  // Check if the current source is a valid YouTube URL for AI generation
+  const isYouTubeSource = !!(youtubeId || audioUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)/));
+
   const [showTranscript, setShowTranscript] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -414,10 +417,21 @@ export default function ListeningPage() {
               </div>
             )}
 
+            {!isYouTubeSource && !error && (
+              <div className="p-3 mb-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs flex items-center gap-2">
+                <AlertCircle size={15} className="shrink-0" />
+                <span>AI generation requires a <b>YouTube URL</b>. Uploaded audio files are not supported — please paste a YouTube link instead.</span>
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: '10px' }}>
               <button className="btn-secondary" onClick={() => setStep('input')} style={{ flex: 1 }}>Back</button>
-              <button className="btn-primary" onClick={handleGenerate} disabled={selectedTypes.length === 0 || isLoading}
-                style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <button
+                className="btn-primary"
+                onClick={handleGenerate}
+                disabled={selectedTypes.length === 0 || isLoading || !isYouTubeSource}
+                style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
                 {isLoading ? (
                   <><div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                   AI is generating...</>
