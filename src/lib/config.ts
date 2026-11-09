@@ -7,7 +7,7 @@ export const config = {
   get apiBaseUrl(): string {
     return (
       process.env.NEXT_PUBLIC_API_BASE_URL ??
-      'https://desperate-selective-nam-performances.trycloudflare.com'
+      'https://compatibility-armed-updated-historic.trycloudflare.com'
     );
   },
 
