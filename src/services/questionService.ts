@@ -8,7 +8,7 @@
 //   Submit     → POST /api/exercises/{id}/results/submit
 //   Results    → GET  /api/exercises/{id}/results
 //
-// API Doc: https://interview-neck-surfaces-urw.trycloudflare.com/swagger-ui.html
+// API Doc:https://interview-neck-surfaces-urw.trycloudflare.com/swagger-ui.html
 
 import type {
   Question,
