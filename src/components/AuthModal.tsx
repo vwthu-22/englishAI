@@ -53,6 +53,7 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
 
   const {
     login,
+    register,
     loginWithGoogle,
     isLoading,
     error,
@@ -62,7 +63,16 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(email, password);
+    if (mode === 'register') {
+      await register({
+        username: email.includes('@') ? email.split('@')[0] : email,
+        email: email.includes('@') ? email : `${email}@example.com`,
+        password,
+        fullName: name || undefined,
+      });
+    } else {
+      await login(email, password);
+    }
     const { isLoggedIn } = useAuthStore.getState();
     if (isLoggedIn) onClose();
   };
@@ -120,12 +130,12 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
             <Zap size={28} color="white" />
           </div>
           <h2 style={{ fontSize: '24px', fontWeight: 800 }} className="gradient-text">
-            {mode === 'login' ? 'Chào mừng bạn!' : 'Tạo tài khoản mới'}
+            {mode === 'login' ? 'Welcome Back!' : 'Create an Account'}
           </h2>
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
             {mode === 'login'
-              ? 'Đăng nhập để vào hệ thống luyện thi EnglishAI'
-              : 'Bắt đầu nâng cao kỹ năng Tiếng Anh'}
+              ? 'Sign in to access EnglishAI practice tests'
+              : 'Start mastering English with AI-powered practice'}
           </p>
         </div>
 
@@ -151,7 +161,7 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
                 boxShadow: mode === m ? '0 2px 10px rgba(108,99,255,0.3)' : 'none',
               }}
             >
-              {m === 'login' ? 'Đăng nhập' : 'Đăng ký'}
+              {m === 'login' ? 'Sign In' : 'Sign Up'}
             </button>
           ))}
         </div>
@@ -235,7 +245,7 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
           ) : (
             <GoogleIcon />
           )}
-          <span>{isGoogleLoading ? 'Đang kết nối Google…' : 'Tiếp tục với Google'}</span>
+          <span>{isGoogleLoading ? 'Connecting to Google…' : 'Continue with Google'}</span>
         </button>
 
         {/* Divider */}
@@ -249,7 +259,7 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
         >
           <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
           <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>
-            hoặc với Email
+            or with email
           </span>
           <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
         </div>
@@ -262,7 +272,7 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
                 className="block text-xs font-semibold mb-1"
                 style={{ color: 'var(--text-secondary)' }}
               >
-                Họ và tên
+                Full Name
               </label>
               <div className="relative">
                 <User
@@ -278,7 +288,7 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
                 <input
                   type="text"
                   className="input-field"
-                  placeholder="Nguyễn Văn A"
+                  placeholder="John Doe"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   style={{
@@ -298,7 +308,7 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
               className="block text-xs font-semibold mb-1"
               style={{ color: 'var(--text-secondary)' }}
             >
-              Email / Tên đăng nhập
+              Email or Username
             </label>
             <div className="relative">
               <Mail
@@ -334,7 +344,7 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
               className="block text-xs font-semibold mb-1"
               style={{ color: 'var(--text-secondary)' }}
             >
-              Mật khẩu
+              Password
             </label>
             <div className="relative">
               <Lock
@@ -400,7 +410,7 @@ export default function AuthModal({ onClose, initialMode = 'login' }: AuthModalP
             {isLoading && (
               <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
             )}
-            {mode === 'login' ? 'Đăng nhập' : 'Đăng ký tài khoản'}
+            {mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
 

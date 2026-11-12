@@ -51,7 +51,7 @@ function CallbackContent() {
 
     if (!code) {
       setStep('error');
-      setErrorMessage('Không tìm thấy Authorization Code từ Google trong URL callback.');
+      setErrorMessage('Google Authorization Code not found in the callback URL.');
       return;
     }
 
@@ -69,7 +69,7 @@ function CallbackContent() {
         setErrorMessage(
           err instanceof Error
             ? err.message
-            : 'Xác thực với tài khoản Google thất bại.'
+            : 'Authentication with Google failed.'
         );
       });
   }, [searchParams, handleGoogleCallback, loginWithDirectToken, router]);
@@ -140,10 +140,10 @@ function CallbackContent() {
             marginBottom: '8px',
           }}
         >
-          {step === 'reading' && 'Đang tiếp nhận mã từ Google…'}
-          {step === 'backend' && 'Đang xác thực tài khoản…'}
-          {step === 'success' && 'Đăng nhập thành công!'}
-          {step === 'error' && 'Đăng nhập không thành công'}
+          {step === 'reading' && 'Receiving code from Google…'}
+          {step === 'backend' && 'Verifying your account…'}
+          {step === 'success' && 'Signed in successfully!'}
+          {step === 'error' && 'Sign-in Failed'}
         </h2>
 
         {/* Status Subtitle */}
@@ -155,10 +155,10 @@ function CallbackContent() {
             lineHeight: 1.5,
           }}
         >
-          {step === 'reading' && 'Đã nhận xác nhận từ Google, đang chuẩn bị kết nối…'}
-          {step === 'backend' && 'Đang hoàn tất phiên làm việc…'}
-          {step === 'success' && 'Hệ thống đã nhận diện tài khoản. Đang chuyển hướng về trang chủ…'}
-          {step === 'error' && (errorMessage || 'Đã có lỗi xảy ra trong quá trình đăng nhập.')}
+          {step === 'reading' && 'Received confirmation from Google, connecting…'}
+          {step === 'backend' && 'Finalizing your session…'}
+          {step === 'success' && 'Account authenticated. Redirecting to home…'}
+          {step === 'error' && (errorMessage || 'An error occurred during authentication.')}
         </p>
 
         {/* Action Buttons */}
@@ -176,7 +176,7 @@ function CallbackContent() {
               gap: '8px',
             }}
           >
-            <RefreshCw size={15} /> Quay về Trang chủ
+            <RefreshCw size={15} /> Back to Home
           </button>
         ) : step === 'success' ? (
           <button
@@ -192,11 +192,11 @@ function CallbackContent() {
               gap: '8px',
             }}
           >
-            Vào học ngay <ArrowRight size={16} />
+            Start Learning <ArrowRight size={16} />
           </button>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '13px' }}>
-            <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Vui lòng đợi trong giây lát…
+            <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Please wait a moment…
           </div>
         )}
       </div>
@@ -227,7 +227,7 @@ export default function AuthCallbackPage() {
           <div style={{ textAlign: 'center' }}>
             <Loader2 size={36} color="#6c63ff" style={{ animation: 'spin 1s linear infinite' }} />
             <p style={{ marginTop: '12px', color: 'var(--text-secondary)', fontSize: '14px' }}>
-              Đang tải xác thực…
+              Authenticating…
             </p>
           </div>
         </div>

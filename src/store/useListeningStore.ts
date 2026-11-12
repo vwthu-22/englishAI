@@ -128,7 +128,7 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
       set({ youtubeId: ytMatch[1], error: null, step: 'configure' });
     } else {
       set({
-        error: 'Chức năng luyện nghe AI yêu cầu link video YouTube (ví dụ: https://www.youtube.com/watch?v=... hoặc https://youtu.be/...). File âm thanh mp3/wav chưa được backend hỗ trợ.',
+        error: 'AI Listening practice requires a valid YouTube video URL (e.g. https://www.youtube.com/watch?v=... or https://youtu.be/...). Audio files are not yet supported.',
       });
     }
   },
@@ -174,7 +174,7 @@ export const useListeningStore = create<ListeningState>((set, get) => ({
     } catch (err: unknown) {
       console.error('Generate listening failed:', err);
       const message =
-        err instanceof Error ? err.message : 'Có lỗi xảy ra khi tạo bài tập listening.';
+        err instanceof Error ? err.message : 'Failed to generate listening exercise.';
       set({ isLoading: false, error: message });
     }
   },

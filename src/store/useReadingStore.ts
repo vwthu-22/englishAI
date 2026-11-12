@@ -126,7 +126,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       set({ questions: result.questions, exerciseId: result.exerciseId, isLoading: false, error: null, step: 'practice' });
     } catch (err: unknown) {
       console.error('Generate reading failed:', err);
-      const message = err instanceof Error ? err.message : 'Có lỗi xảy ra khi tạo bài tập reading.';
+      const message = err instanceof Error ? err.message : 'Failed to generate reading exercise.';
       set({ isLoading: false, error: message });
     }
   },

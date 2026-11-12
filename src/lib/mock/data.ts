@@ -6,7 +6,7 @@ import type { User, Exercise, Question, QuizItem, WeeklyData, MonthlyProgress, C
 
 export const mockUser: User = {
   id: '1',
-  name: 'Nguyễn Văn An',
+  name: 'Alex Johnson',
   email: 'nguyenvanan@email.com',
   level: 'B2',
   joinDate: '2025-01-15',

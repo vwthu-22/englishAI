@@ -218,7 +218,7 @@ export default function ListeningPage() {
               AI Listening Practice with YouTube
             </h1>
             <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto leading-relaxed">
-              Dán đường dẫn video YouTube tiếng Anh. Hệ thống AI sẽ tự động trích xuất transcript và tạo bộ câu hỏi luyện nghe cho bạn.
+              Paste any English YouTube video link. Our AI will automatically extract the transcript and generate customized listening exercises for you.
             </p>
           </div>
 
@@ -240,7 +240,7 @@ export default function ListeningPage() {
                   <LinkIcon size={15} className="text-gray-400 shrink-0" />
                   <input
                     className="flex-1 bg-transparent border-none outline-none text-xs text-gray-800 dark:text-gray-200 placeholder:text-gray-400"
-                    placeholder="https://www.youtube.com/watch?v=... hoặc https://youtu.be/..." 
+                    placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." 
                     value={audioUrl}
                     onChange={e => {
                       setAudioUrl(e.target.value);
@@ -254,7 +254,7 @@ export default function ListeningPage() {
                   disabled={!audioUrl.trim()}
                   className="px-4 h-10 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm shadow-red-200 cursor-pointer"
                 >
-                  <span>Tiếp tục</span>
+                  <span>Continue</span>
                   <ArrowRight size={14} />
                 </button>
               </div>
@@ -269,7 +269,7 @@ export default function ListeningPage() {
 
               {/* Supported format badges */}
               <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800/80">
-                <span className="text-[10px] text-gray-400 font-medium">Hỗ trợ:</span>
+                <span className="text-[10px] text-gray-400 font-medium">Supported formats:</span>
                 <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 px-2 py-0.5 rounded-md">youtube.com/watch?v=ID</span>
                 <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 px-2 py-0.5 rounded-md">youtu.be/ID</span>
                 <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 px-2 py-0.5 rounded-md">youtube.com/embed/ID</span>
@@ -281,7 +281,7 @@ export default function ListeningPage() {
           <div className="w-full max-w-xl">
             <h3 className="text-[11px] font-bold uppercase tracking-wider mb-3 flex items-center gap-2 text-gray-400">
               <Youtube size={13} className="text-red-500" />
-              <span>Hoặc chọn video YouTube mẫu có sẵn phụ đề</span>
+              <span>Or choose a sample YouTube video with captions</span>
               <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -306,7 +306,7 @@ export default function ListeningPage() {
                   <div className="flex-1 min-w-0">
                     <h4 className="text-[11px] font-bold truncate mb-0.5 text-gray-700 dark:text-gray-200">{ex.title}</h4>
                     <span className="text-[10px] font-semibold text-red-600 hover:underline">
-                      + Chọn video này
+                      + Select this video
                     </span>
                     <div className="flex items-center justify-between text-[9px] mt-2 pt-1.5 border-t border-gray-50 dark:border-gray-800 text-gray-400">
                       <span>{ex.duration} • {ex.difficulty}</span>

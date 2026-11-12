@@ -10,7 +10,7 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: "EnglishAI - Smart English Learning Platform",
-  description: "Luyện Listening và Reading với AI thông minh. Nâng cao trình độ tiếng Anh của bạn với EnglishAI.",
+  description: "Smart English Learning Platform with AI-powered Listening and Reading practice. Boost your English proficiency with EnglishAI.",
 };
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi">
+    <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

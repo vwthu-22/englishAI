@@ -661,21 +661,21 @@ export default function LandingPage() {
                 title: 'Excellent structure!',
                 content: 'It completely changed how I practice my English. AI-generated questions are spot on and let me practice listening on any topic.',
                 stars: 5,
-                author: 'Trần Minh H.',
+                author: 'Michael T.',
                 role: 'High School Student'
               },
               {
                 title: 'A complete game changer ⚡',
                 content: 'Being able to turn any YouTube video or news passage into an interactive quiz is mind-blowing. Highly recommended.',
                 stars: 5,
-                author: 'Lê Thuỳ L.',
+                author: 'Sarah L.',
                 role: 'University Student'
               },
               {
                 title: 'Great for IELTS prep',
                 content: 'The reading section is extremely close to the real exams. I can practice and preview answers with detailed explanations.',
                 stars: 5,
-                author: 'Nguyễn Quốc A.',
+                author: 'David A.',
                 role: 'IELTS candidate'
               }
             ].map((rev, i) => (

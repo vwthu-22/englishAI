@@ -157,19 +157,19 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     let friendlyMessage = rawMessage || 'An unexpected error occurred.';
 
     if (response.status === 429 || rawMessage.includes('credit_balance_exhausted') || rawMessage.includes('insufficient_quota')) {
-      friendlyMessage = 'OpenAI API hết credits. Vui lòng liên hệ quản trị viên để nạp thêm credits.';
+      friendlyMessage = 'OpenAI API quota exhausted. Please contact the administrator to refill credits.';
     } else if (response.status === 401) {
-      friendlyMessage = 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
+      friendlyMessage = 'Session expired or unauthorized. Please log in again.';
     } else if (response.status === 403) {
-      friendlyMessage = 'Bạn không có quyền thực hiện thao tác này.';
+      friendlyMessage = 'You do not have permission to perform this action.';
     } else if (response.status === 404) {
-      friendlyMessage = 'Không tìm thấy dữ liệu yêu cầu.';
+      friendlyMessage = 'Requested resource not found.';
     } else if (response.status === 400 && rawMessage.toLowerCase().includes('youtube')) {
-      friendlyMessage = 'Không thể lấy transcript từ video YouTube này. Video có thể không có phụ đề hoặc bị giới hạn.';
+      friendlyMessage = 'Unable to extract transcript from this YouTube video. It might not have captions or is restricted.';
     } else if (response.status === 400 && rawMessage.toLowerCase().includes('failed to generate')) {
-      friendlyMessage = 'AI không thể tạo câu hỏi từ nội dung này. Vui lòng thử lại hoặc dùng nội dung khác.';
+      friendlyMessage = 'AI could not generate questions from this content. Please try another video or text.';
     } else if (response.status >= 500) {
-      friendlyMessage = 'Lỗi máy chủ. Vui lòng thử lại sau ít phút.';
+      friendlyMessage = 'Server error. Please try again in a few moments.';
     }
 
     throw new ApiError(

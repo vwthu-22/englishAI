@@ -107,7 +107,7 @@ export default function LoginPage() {
             textDecoration: 'none',
           }}
         >
-          <ArrowLeft size={16} /> Quay về Trang chủ
+          <ArrowLeft size={16} /> Back to Home
         </Link>
       </div>
 
@@ -142,12 +142,12 @@ export default function LoginPage() {
             <Zap size={30} color="white" />
           </div>
           <h1 style={{ fontSize: '24px', fontWeight: 800, margin: '0 0 6px 0' }} className="gradient-text">
-            {mode === 'login' ? 'Chào mừng trở lại!' : 'Tạo tài khoản mới'}
+            {mode === 'login' ? 'Welcome Back!' : 'Create an Account'}
           </h1>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
             {mode === 'login'
-              ? 'Đăng nhập để tiếp tục luyện tập Listening & Reading'
-              : 'Bắt đầu hành trình nâng cao trình độ Tiếng Anh cùng AI'}
+              ? 'Sign in to continue your Listening & Reading practice'
+              : 'Start your journey to mastering English with AI'}
           </p>
         </div>
 
@@ -170,7 +170,7 @@ export default function LoginPage() {
                 boxShadow: mode === m ? '0 2px 10px rgba(108,99,255,0.3)' : 'none',
               }}
             >
-              {m === 'login' ? 'Đăng nhập' : 'Đăng ký'}
+              {m === 'login' ? 'Sign In' : 'Sign Up'}
             </button>
           ))}
         </div>
@@ -252,7 +252,7 @@ export default function LoginPage() {
           ) : (
             <GoogleIcon />
           )}
-          <span>{isGoogleLoading ? 'Đang kết nối với Google…' : 'Đăng nhập với Google'}</span>
+          <span>{isGoogleLoading ? 'Connecting to Google…' : 'Sign in with Google'}</span>
         </button>
 
         {/* Divider */}
@@ -266,7 +266,7 @@ export default function LoginPage() {
         >
           <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
           <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>
-            hoặc với Email
+            or with email
           </span>
           <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
         </div>
@@ -276,7 +276,7 @@ export default function LoginPage() {
           {mode === 'register' && (
             <div className="mb-4">
               <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                Họ và tên
+                Full Name
               </label>
               <div className="relative">
                 <User
@@ -292,7 +292,7 @@ export default function LoginPage() {
                 <input
                   type="text"
                   className="input-field"
-                  placeholder="Nguyễn Văn A"
+                  placeholder="John Doe"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   style={{ paddingLeft: '42px', width: '100%', borderRadius: '10px', padding: '10px 14px 10px 42px' }}
@@ -329,7 +329,7 @@ export default function LoginPage() {
 
           <div className="mb-6">
             <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-              Mật khẩu
+              Password
             </label>
             <div className="relative">
               <Lock
@@ -391,7 +391,7 @@ export default function LoginPage() {
             disabled={isLoading}
           >
             {isLoading && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
-            {mode === 'login' ? 'Đăng nhập' : 'Đăng ký tài khoản'}
+            {mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
       </div>

@@ -77,9 +77,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
     set({ isLoading: true, error: null, successMessage: null });
     try {
       const user = await authService.register(data);
-      set({ user, isLoggedIn: true, isLoading: false, successMessage: `Chào mừng ${user.name} đến với Studish!` });
+      set({ user, isLoggedIn: true, isLoading: false, successMessage: `Welcome ${user.name} to EnglishAI!` });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Đăng ký thất bại.';
+      const message = err instanceof Error ? err.message : 'Registration failed.';
       set({ isLoading: false, error: message, isLoggedIn: false });
     }
   },
@@ -138,7 +138,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
       const updated = await authService.updateProfile(data);
       set((state) => ({
         user: state.user ? { ...state.user, ...updated } : updated,
-        successMessage: 'Cập nhật thông tin thành công!',
+        successMessage: 'Profile updated successfully!',
       }));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update profile.';

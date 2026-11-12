@@ -51,7 +51,7 @@ export default function CommunityPage() {
             difficulty: item.difficulty,
             questionCount: item.questionCount,
             author: item.createdByUsername || 'Community Learner',
-            publishedAt: item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : 'Gần đây',
+            publishedAt: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US') : 'Recently',
             plays: 100 + (item.id % 50) * 12,
             likes: 15 + (item.id % 20) * 3,
             rating: 4.8,

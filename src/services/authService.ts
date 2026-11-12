@@ -296,7 +296,7 @@ export const authService = {
   redirectToGoogle(customClientId?: string, customRedirectUri?: string): void {
     const clientId = customClientId || config.googleClientId;
     if (!clientId) {
-      throw new Error('Google Client ID chưa được cấu hình. Vui lòng liên hệ quản trị viên.');
+      throw new Error('Google Client ID is not configured. Please contact administrator.');
     }
     const url = this.getGoogleAuthUrl(clientId, customRedirectUri);
     window.location.href = url;
@@ -323,7 +323,7 @@ export const authService = {
       return buildUser(data.accessToken, data.user);
     }
 
-    throw new Error('Không nhận được token từ máy chủ.');
+    throw new Error('No token received from server.');
   },
 
   /**
@@ -339,7 +339,7 @@ export const authService = {
       saveTokens(data.accessToken, data.refreshToken);
       return buildUser(data.accessToken, data.user);
     }
-    throw new Error('Xác thực Google ID Token thất bại.');
+    throw new Error('Google ID Token authentication failed.');
   },
 
   /**
