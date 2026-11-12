@@ -5,7 +5,7 @@
 export const config = {
   /** Base URL of the Studish backend (Spring Boot) */
   get apiBaseUrl(): string {
-    return 'https://compatibility-armed-updated-historic.trycloudflare.com';
+    return 'https://interview-neck-surfaces-urw.trycloudflare.com';
   },
 
   /** Google OAuth 2.0 Client ID (from Google Cloud Console) */
