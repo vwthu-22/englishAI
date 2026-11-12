@@ -495,7 +495,7 @@ export default function ReadingPage() {
                 </div>
                 {q.type === 'multiple-choice' || q.type === 'true-false' || q.type === 'matching' ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '38px' }}>
-                    {(q.options || []).map((opt, i) => (
+                    {(q.type === 'true-false' && (!q.options || q.options.length === 0) ? ['TRUE', 'FALSE'] : (q.options || [])).map((opt, i) => (
                       <button key={i} className={`option-btn ${answers[q.id] === opt ? 'selected' : ''}`} onClick={() => handleAnswer(q.id, opt)}>
                         <span style={{ width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0, background: answers[q.id] === opt ? 'rgba(108,99,255,0.3)' : 'rgba(255,255,255,0.05)', border: `1px solid ${answers[q.id] === opt ? '#6c63ff' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700 }}>
                            {String.fromCharCode(65 + i)}

@@ -568,7 +568,7 @@ export default function ListeningPage() {
 
                 {q.type === 'multiple-choice' || q.type === 'true-false' || q.type === 'matching' ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '38px' }}>
-                    {(q.options || []).map((opt, i) => (
+                    {(q.type === 'true-false' && (!q.options || q.options.length === 0) ? ['TRUE', 'FALSE'] : (q.options || [])).map((opt, i) => (
                       <button
                         key={i}
                         className={`option-btn ${answers[q.id] === opt ? 'selected' : ''}`}
