@@ -2,9 +2,10 @@
 import React, { useState, useMemo } from 'react';
 import {
   Search, Headphones, BookOpen, Heart, Play, Zap,
-  X, ArrowLeft, Clock, RotateCcw
+  X, ArrowLeft, Clock, RotateCcw, Bookmark
 } from 'lucide-react';
 import { useQuizStore, PublishedQuiz } from '@/store/useQuizStore';
+import { useBookmarkStore } from '@/store/useBookmarkStore';
 import { useExerciseStore } from '@/store/useExerciseStore';
 import { CompletedTest } from '@/types';
 import Link from 'next/link';
@@ -118,10 +119,11 @@ export default function MyTestsPage() {
   const { publishedListeningQuizzes, publishedReadingQuizzes, completedTests, likedIds, toggleLike } = useQuizStore();
   const exercises = useExerciseStore((s) => s.exercises);
 
-  const [mainTab, setMainTab] = useState<'posted' | 'history'>('posted');
+  const [mainTab, setMainTab] = useState<'posted' | 'saved' | 'history'>('posted');
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<FilterType>('all');
   const [selected, setSelected] = useState<PublishedQuiz | null>(null);
+  const { bookmarks, toggleBookmark, isBookmarked } = useBookmarkStore();
 
   // Combine user-created published quizzes from store + backend exercises + seed quizzes
   const myTestsList = useMemo<PublishedQuiz[]>(() => {
@@ -153,6 +155,27 @@ export default function MyTestsPage() {
     return SEED_MY_TESTS;
   }, [publishedListeningQuizzes, publishedReadingQuizzes, exercises]);
 
+  // Saved tests list from bookmarks store
+  const savedList = useMemo<PublishedQuiz[]>(() => {
+    return bookmarks.map((b) => ({
+      id: b.id,
+      title: b.title,
+      type: b.type,
+      topic: b.topic || 'Saved Community Quiz',
+      questions: b.questions || [],
+      difficulty: b.difficulty,
+      questionCount: b.questionCount,
+      author: b.author || 'Community Creator',
+      publishedAt: b.publishedAt || 'Recently',
+      plays: b.plays ?? 120,
+      likes: b.likes ?? 18,
+      rating: 4.8,
+      audioUrl: b.audioUrl,
+      videoId: b.videoId,
+      passage: b.passage,
+    }));
+  }, [bookmarks]);
+
   // Completed tests list
   const completedList = useMemo<CompletedTest[]>(() => {
     if (completedTests && completedTests.length > 0) return completedTests;
@@ -172,6 +195,21 @@ export default function MyTestsPage() {
     }
     return list;
   }, [myTestsList, filterType, search]);
+
+  // Filtered saved list
+  const filteredSaved = useMemo(() => {
+    let list = savedList;
+    if (filterType !== 'all') list = list.filter(q => q.type === filterType);
+    if (search.trim()) {
+      const qLower = search.toLowerCase();
+      list = list.filter(q =>
+        q.title.toLowerCase().includes(qLower) ||
+        (q.topic ?? '').toLowerCase().includes(qLower) ||
+        q.author.toLowerCase().includes(qLower)
+      );
+    }
+    return list;
+  }, [savedList, filterType, search]);
 
   // Filtered history list
   const filteredHistory = useMemo(() => {
@@ -201,17 +239,17 @@ export default function MyTestsPage() {
         </div>
 
         <div className="card p-3 md:p-4 text-center">
-          <div className="text-xl md:text-2xl font-bold" style={{ color: '#3b82f6' }}>
-            {completedList.length}
+          <div className="text-xl md:text-2xl font-bold" style={{ color: '#0ea5e9' }}>
+            {savedList.length}
           </div>
-          <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Completed Tests</div>
+          <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Saved Tests</div>
         </div>
 
         <div className="card p-3 md:p-4 text-center">
           <div className="text-xl md:text-2xl font-bold" style={{ color: '#10b981' }}>
-            {totalPlays.toLocaleString('en-US')}
+            {completedList.length}
           </div>
-          <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Total Plays</div>
+          <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Completed Tests</div>
         </div>
 
         <div className="card p-3 md:p-4 text-center">
@@ -223,10 +261,10 @@ export default function MyTestsPage() {
       </div>
 
       {/* Main Tab Navigation */}
-      <div className="flex border-b border-gray-200 dark:border-gray-800 gap-6 mt-1">
+      <div className="flex border-b border-gray-200 dark:border-gray-800 gap-6 mt-1 overflow-x-auto">
         <button
           onClick={() => setMainTab('posted')}
-          className={`pb-3 text-xs md:text-sm font-bold border-b-2 transition-all cursor-pointer ${
+          className={`pb-3 text-xs md:text-sm font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             mainTab === 'posted'
               ? 'border-violet-600 text-violet-600 dark:text-violet-400'
               : 'border-transparent text-gray-400 hover:text-gray-600'
@@ -235,8 +273,18 @@ export default function MyTestsPage() {
           My Posted Tests ({myTestsList.length})
         </button>
         <button
+          onClick={() => setMainTab('saved')}
+          className={`pb-3 text-xs md:text-sm font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+            mainTab === 'saved'
+              ? 'border-violet-600 text-violet-600 dark:text-violet-400'
+              : 'border-transparent text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          <Bookmark size={14} /> Saved Tests ({savedList.length})
+        </button>
+        <button
           onClick={() => setMainTab('history')}
-          className={`pb-3 text-xs md:text-sm font-bold border-b-2 transition-all cursor-pointer ${
+          className={`pb-3 text-xs md:text-sm font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             mainTab === 'history'
               ? 'border-violet-600 text-violet-600 dark:text-violet-400'
               : 'border-transparent text-gray-400 hover:text-gray-600'
@@ -252,7 +300,13 @@ export default function MyTestsPage() {
           <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           <input
             className="w-full"
-            placeholder={mainTab === 'posted' ? "Search my posted tests..." : "Search test history..."}
+            placeholder={
+              mainTab === 'posted'
+                ? 'Search my posted tests...'
+                : mainTab === 'saved'
+                ? 'Search saved community tests...'
+                : 'Search test history...'
+            }
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{
@@ -306,6 +360,54 @@ export default function MyTestsPage() {
               <Zap size={36} style={{ margin: '0 auto 10px', opacity: 0.3 }} />
               <p className="text-sm font-semibold">No posted tests found.</p>
               <p className="text-xs mt-1">Create a test in AI Quiz to publish it!</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab Content: Saved Tests (Bookmarked from Community) */}
+      {mainTab === 'saved' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {filteredSaved.map(quiz => (
+            <SavedTestCard
+              key={quiz.id}
+              quiz={quiz}
+              isLiked={likedIds.has(quiz.id)}
+              isSaved={isBookmarked(quiz.id)}
+              onLike={() => toggleLike(quiz.id, quiz.type)}
+              onSave={() =>
+                toggleBookmark({
+                  id: quiz.id,
+                  title: quiz.title,
+                  type: quiz.type,
+                  difficulty: quiz.difficulty,
+                  questionCount: quiz.questionCount,
+                  author: quiz.author,
+                  publishedAt: quiz.publishedAt,
+                  videoId: quiz.videoId,
+                  audioUrl: quiz.audioUrl,
+                  passage: quiz.passage,
+                  questions: quiz.questions,
+                  plays: quiz.plays,
+                  likes: quiz.likes,
+                  topic: quiz.topic,
+                })
+              }
+              onOpen={() => setSelected(quiz)}
+            />
+          ))}
+
+          {filteredSaved.length === 0 && (
+            <div className="col-span-full text-center py-16" style={{ color: 'var(--text-muted)' }}>
+              <Bookmark size={36} style={{ margin: '0 auto 10px', opacity: 0.3 }} />
+              <p className="text-sm font-semibold">No saved tests found.</p>
+              <p className="text-xs mt-1 mb-4">Explore community quizzes and bookmark your favorites to practice anytime!</p>
+              <Link
+                href="/community"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 transition-all shadow-sm"
+              >
+                Browse Community Tests
+              </Link>
             </div>
           )}
         </div>
@@ -475,6 +577,117 @@ function MyTestCard({
               {quiz.likes}
             </span>
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Saved Test Card (Bookmarked from Community) ─── */
+function SavedTestCard({
+  quiz, isLiked, isSaved, onLike, onSave, onOpen
+}: {
+  quiz: PublishedQuiz;
+  isLiked: boolean;
+  isSaved: boolean;
+  onLike: () => void;
+  onSave: () => void;
+  onOpen: () => void;
+}) {
+  const isListening = quiz.type === 'listening';
+  const accentColor = isListening ? '#6c63ff' : '#10b981';
+  const bgColor = isListening ? 'rgba(108,99,255,0.08)' : 'rgba(16,185,129,0.08)';
+  const practiceHref = isListening ? `/listening?take=${quiz.id}` : `/reading?take=${quiz.id}`;
+
+  return (
+    <div
+      className="card cursor-pointer group hover:border-violet-300 transition-all"
+      style={{ padding: 0, overflow: 'hidden', border: '1px solid var(--border)' }}
+      onClick={onOpen}
+    >
+      {/* Top Banner */}
+      <div className="relative flex items-center justify-center"
+        style={{ height: '76px', background: bgColor }}>
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center"
+          style={{ background: accentColor + '20' }}>
+          {isListening
+            ? <Headphones size={20} color={accentColor} />
+            : <BookOpen size={20} color={accentColor} />}
+        </div>
+        <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full"
+          style={{ background: accentColor + '20', color: accentColor }}>
+          {quiz.difficulty}
+        </span>
+        <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full capitalize"
+          style={{ background: 'rgba(255,255,255,0.9)', color: accentColor }}>
+          {isListening ? 'Listening' : 'Reading'}
+        </span>
+      </div>
+
+      {/* Body */}
+      <div className="p-3 flex flex-col gap-1.5">
+        <p className="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-violet-600 transition-colors"
+          style={{ color: 'var(--text-primary)' }}>
+          {quiz.title}
+        </p>
+
+        {quiz.topic && (
+          <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{quiz.topic}</span>
+        )}
+
+        {/* Author & Published date */}
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <div className="w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white shrink-0"
+            style={{ background: 'linear-gradient(135deg, #0ea5e9, #6366f1)' }}>
+            {quiz.author.charAt(0)}
+          </div>
+          <span className="text-[10px] font-medium truncate" style={{ color: 'var(--text-secondary)' }}>
+            {quiz.author}
+          </span>
+          <span className="text-[10px] ml-auto" style={{ color: 'var(--text-muted)' }}>
+            {quiz.publishedAt}
+          </span>
+        </div>
+
+        {/* Footer: Un-bookmark, Like & Practice button */}
+        <div className="flex items-center justify-between pt-2 mt-1 border-t" style={{ borderColor: 'var(--border)' }}>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={(e) => { e.stopPropagation(); onSave(); }}
+              title={isSaved ? "Remove from saved" : "Save test"}
+              className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-110"
+              style={{
+                background: isSaved ? 'rgba(108,99,255,0.12)' : 'var(--bg-card)',
+                border: `1px solid ${isSaved ? 'rgba(108,99,255,0.3)' : 'var(--border)'}`,
+                cursor: 'pointer'
+              }}
+            >
+              <Bookmark size={12} color={isSaved ? '#6c63ff' : 'var(--text-muted)'} fill={isSaved ? '#6c63ff' : 'none'} />
+            </button>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); onLike(); }}
+              className="flex items-center gap-1 px-2 h-7 rounded-lg transition-all hover:scale-105"
+              style={{
+                background: isLiked ? 'rgba(244,63,94,0.1)' : 'var(--bg-card)',
+                border: `1px solid ${isLiked ? 'rgba(244,63,94,0.25)' : 'var(--border)'}`,
+                cursor: 'pointer'
+              }}
+            >
+              <Heart size={11} color={isLiked ? '#f43f5e' : 'var(--text-muted)'} fill={isLiked ? '#f43f5e' : 'none'} />
+              <span className="text-[10px] font-bold" style={{ color: isLiked ? '#f43f5e' : 'var(--text-muted)' }}>
+                {quiz.likes}
+              </span>
+            </button>
+          </div>
+
+          <Link
+            href={practiceHref}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1 px-2.5 h-7 rounded-lg text-[11px] font-bold text-violet-600 bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/40 dark:text-violet-300 transition-all"
+          >
+            <Play size={10} fill="currentColor" /> Practice
+          </Link>
         </div>
       </div>
     </div>

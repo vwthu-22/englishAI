@@ -14,6 +14,9 @@ export interface Bookmark {
   audioUrl?: string;
   passage?: string;
   questions: Question[];
+  plays?: number;
+  likes?: number;
+  topic?: string;
 }
 
 interface BookmarkState {

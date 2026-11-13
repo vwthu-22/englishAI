@@ -7,6 +7,7 @@ import {
   Globe
 } from 'lucide-react';
 import { useQuizStore, PublishedQuiz } from '@/store/useQuizStore';
+import { useBookmarkStore } from '@/store/useBookmarkStore';
 import { defaultQuizzes } from '@/lib/mock/data';
 import { exerciseService } from '@/services/exerciseService';
 
@@ -35,7 +36,7 @@ export default function CommunityPage() {
   const [sortBy, setSortBy] = useState<SortType>('popular');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<PublishedQuiz | null>(null);
-  const [saved, setSaved] = useState<Set<string>>(new Set());
+  const { toggleBookmark, isBookmarked } = useBookmarkStore();
   const [beQuizzes, setBeQuizzes] = useState<PublishedQuiz[]>([]);
 
   useEffect(() => {
@@ -85,15 +86,22 @@ export default function CommunityPage() {
     return list;
   }, [allQuizzes, filterType, sortBy, search]);
 
-  const handleToggleSave = (id: string) => {
-    setSaved(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
+  const handleToggleSave = (quiz: PublishedQuiz) => {
+    toggleBookmark({
+      id: quiz.id,
+      title: quiz.title,
+      type: quiz.type,
+      difficulty: quiz.difficulty,
+      questionCount: quiz.questionCount,
+      author: quiz.author,
+      publishedAt: quiz.publishedAt,
+      videoId: quiz.videoId,
+      audioUrl: quiz.audioUrl,
+      passage: quiz.passage,
+      questions: quiz.questions,
+      plays: quiz.plays,
+      likes: quiz.likes,
+      topic: quiz.topic,
     });
   };
 
@@ -190,9 +198,9 @@ export default function CommunityPage() {
             key={quiz.id}
             quiz={quiz}
             isLiked={likedIds.has(quiz.id)}
-            isSaved={saved.has(quiz.id)}
+            isSaved={isBookmarked(quiz.id)}
             onLike={() => toggleLike(quiz.id, quiz.type)}
-            onSave={() => handleToggleSave(quiz.id)}
+            onSave={() => handleToggleSave(quiz)}
             onOpen={() => setSelected(quiz)}
           />
         ))}
@@ -209,9 +217,9 @@ export default function CommunityPage() {
         <DetailPanel
           quiz={selected}
           isLiked={likedIds.has(selected.id)}
-          isSaved={saved.has(selected.id)}
+          isSaved={isBookmarked(selected.id)}
           onLike={() => toggleLike(selected.id, selected.type)}
-          onSave={() => handleToggleSave(selected.id)}
+          onSave={() => handleToggleSave(selected)}
           onClose={() => setSelected(null)}
         />
       )}
