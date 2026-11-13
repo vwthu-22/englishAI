@@ -403,7 +403,7 @@ export default function MyTestsPage() {
               <p className="text-sm font-semibold">No saved tests found.</p>
               <p className="text-xs mt-1 mb-4">Explore community quizzes and bookmark your favorites to practice anytime!</p>
               <Link
-                href="/community"
+                href="/#community"
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 transition-all shadow-sm"
               >
                 Browse Community Tests

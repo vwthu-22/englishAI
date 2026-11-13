@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search, BookOpen, Headphones, ChevronRight, Bookmark,
   Star, Flame, Globe, Heart, Play,
@@ -8,6 +8,8 @@ import {
 import { useAuthStore } from '@/store/useAuthStore';
 import { useExerciseStore } from '@/store/useExerciseStore';
 import { useQuizStore, PublishedQuiz } from '@/store/useQuizStore';
+import { useBookmarkStore } from '@/store/useBookmarkStore';
+import { exerciseService } from '@/services/exerciseService';
 import { defaultQuizzes } from '@/lib/mock/data';
 import Link from 'next/link';
 
@@ -39,7 +41,33 @@ export default function HomePage() {
   const [filterType, setFilterType] = useState<FilterType>('all');
   const [sortBy, setSortBy] = useState<SortType>('popular');
   const [selected, setSelected] = useState<PublishedQuiz | null>(null);
-  const [saved, setSaved] = useState<Set<string>>(new Set());
+  const { toggleBookmark, isBookmarked } = useBookmarkStore();
+  const [beQuizzes, setBeQuizzes] = useState<PublishedQuiz[]>([]);
+
+  useEffect(() => {
+    exerciseService.search({ size: 50 })
+      .then((res) => {
+        if (res?.content && res.content.length > 0) {
+          const diffMap: Record<string, string> = { EASY: 'easy', MEDIUM: 'medium', HARD: 'hard' };
+          const mapped: PublishedQuiz[] = res.content.map((item) => ({
+            id: String(item.id),
+            title: item.title,
+            type: item.type === 'LISTENING' ? 'listening' : 'reading',
+            topic: item.description || 'Community',
+            questions: [],
+            difficulty: diffMap[item.difficulty] || item.difficulty?.toLowerCase() || 'medium',
+            questionCount: item.questionCount || 5,
+            author: item.createdByUsername || 'Community User',
+            publishedAt: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Recent',
+            plays: 0,
+            likes: 0,
+            rating: 5.0,
+          }));
+          setBeQuizzes(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // In-progress exercises
   const inProgress = exercises.filter(e => e.status === 'in-progress');
@@ -47,10 +75,10 @@ export default function HomePage() {
   // Merge all published & community quizzes
   const allQuizzes = useMemo<PublishedQuiz[]>(() => {
     const userPublished = [...publishedListeningQuizzes, ...publishedReadingQuizzes];
-    const ids = new Set(userPublished.map(q => q.id));
+    const ids = new Set([...userPublished.map(q => q.id), ...beQuizzes.map(q => q.id)]);
     const seed = SEED_COMMUNITY.filter(q => !ids.has(q.id));
-    return [...userPublished, ...seed];
-  }, [publishedListeningQuizzes, publishedReadingQuizzes]);
+    return [...userPublished, ...beQuizzes, ...seed];
+  }, [publishedListeningQuizzes, publishedReadingQuizzes, beQuizzes]);
 
   // Filtered & sorted list
   const filteredQuizzes = useMemo(() => {
@@ -70,15 +98,22 @@ export default function HomePage() {
     return list;
   }, [allQuizzes, filterType, sortBy, searchQuery]);
 
-  const handleToggleSave = (id: string) => {
-    setSaved(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
+  const handleToggleSave = (quiz: PublishedQuiz) => {
+    toggleBookmark({
+      id: quiz.id,
+      title: quiz.title,
+      type: quiz.type,
+      difficulty: quiz.difficulty,
+      questionCount: quiz.questionCount,
+      author: quiz.author,
+      publishedAt: quiz.publishedAt,
+      videoId: quiz.videoId,
+      audioUrl: quiz.audioUrl,
+      passage: quiz.passage,
+      questions: quiz.questions,
+      plays: quiz.plays,
+      likes: quiz.likes,
+      topic: quiz.topic,
     });
   };
 
@@ -161,7 +196,7 @@ export default function HomePage() {
       )}
 
       {/* ─── Community & Published Quizzes Section ─── */}
-      <div className="flex flex-col gap-3">
+      <div id="community" className="flex flex-col gap-3 scroll-mt-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center"
@@ -216,9 +251,9 @@ export default function HomePage() {
               key={quiz.id}
               quiz={quiz}
               isLiked={likedIds.has(quiz.id)}
-              isSaved={saved.has(quiz.id)}
+              isSaved={isBookmarked(quiz.id)}
               onLike={() => toggleLike(quiz.id, quiz.type)}
-              onSave={() => handleToggleSave(quiz.id)}
+              onSave={() => handleToggleSave(quiz)}
               onOpen={() => setSelected(quiz)}
             />
           ))}
@@ -236,9 +271,9 @@ export default function HomePage() {
         <DetailPanel
           quiz={selected}
           isLiked={likedIds.has(selected.id)}
-          isSaved={saved.has(selected.id)}
+          isSaved={isBookmarked(selected.id)}
           onLike={() => toggleLike(selected.id, selected.type)}
-          onSave={() => handleToggleSave(selected.id)}
+          onSave={() => handleToggleSave(selected)}
           onClose={() => setSelected(null)}
         />
       )}
@@ -358,7 +393,7 @@ function DetailPanel({
 }) {
   const isListening = quiz.type === 'listening';
   const accentColor = isListening ? '#6c63ff' : '#10b981';
-  const href = isListening ? '/listening' : '/reading';
+  const href = isListening ? `/listening?take=${quiz.id}` : `/reading?take=${quiz.id}`;
 
   return (
     <>
